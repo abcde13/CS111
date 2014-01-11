@@ -12,7 +12,7 @@
 
 struct command_stream
 {
-    command **forest_pointer;
+    command_t **forest_pointer;
 };
 
 command_stream_t
@@ -25,27 +25,26 @@ make_command_stream (int (*get_next_byte) (void *),
   //error (1, 0, "command reading not yet implemented");	
   int c = get_next_byte(get_next_byte_argument);
   while(c!=EOF){
- 	printf("%c", c );
       switch (c) {
-          case <:
-              <#statements#>
+          case '<' :
+		printf("< \n");
               break;
-          case >:
-              <#statements#>
+          case '>' :
+		printf("> \n");
               break;
-          case &:
-              <#statements#>
+          case '&' :
+		printf("& \n");
               break;
-          case |:
-              <#statements#>
+          case '|' :
+		printf("| \n");
               break;
-          case (:
-              <#statements#>
+          case '(' :
+		printf("( \n");
               break;
-          case ):
-              <#statements#>
+          case ')' :
+		printf(") \n");
               break;
-          default:
+          default :
               break;
       }
   	c = get_next_byte(get_next_byte_argument);
