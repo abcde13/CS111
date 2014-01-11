@@ -99,6 +99,7 @@ make_command_stream (int (*get_next_byte) (void *),
             default :
                 if(andFlag){
 			printf("Error \n");
+			andFlag =0;
 		} else if(orFlag){
 			printf("Pipe \n");
 			orFlag = 0;
