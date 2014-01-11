@@ -61,6 +61,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			printf("Pipe \n");
 			orFlag = 0;
 		}
+		break;
             case '|' :
                 printf("%c \n", c);
                 if(andFlag){
