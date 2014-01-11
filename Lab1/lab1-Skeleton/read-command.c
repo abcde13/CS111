@@ -12,7 +12,7 @@
 
 struct command_stream
 {
-    char **forest_pointer;
+    command **forest_pointer;
 };
 
 command_stream_t
@@ -26,6 +26,28 @@ make_command_stream (int (*get_next_byte) (void *),
   int c = get_next_byte(get_next_byte_argument);
   while(c!=EOF){
  	printf("%c", c );
+      switch (c) {
+          case <:
+              <#statements#>
+              break;
+          case >:
+              <#statements#>
+              break;
+          case &:
+              <#statements#>
+              break;
+          case |:
+              <#statements#>
+              break;
+          case (:
+              <#statements#>
+              break;
+          case ):
+              <#statements#>
+              break;
+          default:
+              break;
+      }
   	c = get_next_byte(get_next_byte_argument);
   }
   return 0;
