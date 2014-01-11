@@ -23,32 +23,40 @@ make_command_stream (int (*get_next_byte) (void *),
      add auxiliary functions and otherwise modify the source code.
      You can also use external functions defined in the GNU C Library.  */
   //error (1, 0, "command reading not yet implemented");	
-  int c = get_next_byte(get_next_byte_argument);
-  while(c!=EOF){
-      switch (c) {
-          case '<' :
-		printf("< \n");
-              break;
-          case '>' :
-		printf("> \n");
-              break;
-          case '&' :
-		printf("& \n");
-              break;
-          case '|' :
-		printf("| \n");
-              break;
-          case '(' :
-		printf("( \n");
-              break;
-          case ')' :
-		printf(") \n");
-              break;
-          default :
-              break;
-      }
-  	c = get_next_byte(get_next_byte_argument);
-  }
+    int c = get_next_byte(get_next_byte_argument);
+    int Andflag = 0;
+    
+    while(c!=EOF){
+        switch (c) {
+            case '<' :
+                printf("< \n");
+                break;
+            case '>' :
+                printf("> \n");
+                break;
+            case '&' :
+                printf("& \n");
+                c = get_next_byte(get_next_byte_argument);
+                if(c!='&')
+                    printf("failed");
+                break;
+            case '|' :
+                printf("| \n");
+                c = get_next_byte(get_next_byte_argument);
+                if(c!='|')
+                    printf("it's a pipeline");
+                break;
+            case '(' :
+                printf("( \n");
+                break;
+            case ')' :
+                printf(") \n");
+                break;
+            default :
+                break;
+        }
+        c = get_next_byte(get_next_byte_argument);
+    }
   return 0;
 }
 
