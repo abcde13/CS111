@@ -40,9 +40,12 @@ make_command_stream (int (*get_next_byte) (void *),
 		spaceFlag = 1;
 		continue;
 	}
+	if(spaceFlag && wordFlag){
+		wordFlag = 0;
+	}
 	spaceFlag = 0;
         switch (c) {
-            /*case '<' :
+            case '<' :
                 printf("< \n");
 		wordFlag = 0;
 		if(andFlag){
@@ -115,10 +118,13 @@ make_command_stream (int (*get_next_byte) (void *),
 			printf("Pipe \n");
 			orFlag = 0;
 		}
-                break;*/
+                break;
+	    case '\n' : 
+	    case ';':
+		wordFlag = 0;
+		break;
             default :
 		if(!isalnum(c) && c!='!'&& c!='%' && c!='+'&& c!=',' && c!='-' && c!='.' &&  c!='/'&&  c!=':'&& c!='@'&& c!='^'&& c!='_'){
-			printf("%c \n", c);
 			printf("Error \n");
 		}else{
 			if(andFlag){
