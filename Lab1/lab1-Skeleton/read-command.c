@@ -29,6 +29,15 @@ make_command_stream (int (*get_next_byte) (void *),
     int orFlag = 0;
     int wordFlag = 0;
     int spaceFlag = 0;
+    const int AND_OPERATOR = 0;
+    const int OR_OPERATOR = 1;
+    const int PIPE_OPERATOR = 2;
+    const int REDIRECT_FROM = 3;
+    const int REDIRECT_TO = 4;
+    const int OPEN_PAREN = 5;
+    const int CLOSE_PAREN = 6;
+    const int NEWLINE  = 7;
+    const int SPACE = 8;
     
     while(c!=EOF){
 	if(c == ' ' && spaceFlag){
@@ -153,3 +162,5 @@ read_command_stream (command_stream_t s)
   error (1, 0, "command reading not yet implemented");
   return 0;
 }
+
+
