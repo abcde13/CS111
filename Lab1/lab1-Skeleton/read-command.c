@@ -4,6 +4,7 @@
 #include "command-internals.h"
 #include <stdio.h>
 #include <error.h>
+#include <ctype.h>
 
 /* FIXME: You may need to add #include directives, macro definitions,
    static function definitions, etc.  */
@@ -26,11 +27,22 @@ make_command_stream (int (*get_next_byte) (void *),
     int c = get_next_byte(get_next_byte_argument);
     int andFlag = 0;
     int orFlag = 0;
+    int wordFlag = 0;
+    int spaceFlag = 0;
     
     while(c!=EOF){
+	if(c == ' ' && spaceFlag){
+        	c = get_next_byte(get_next_byte_argument);
+		continue;
+	} else if (c == ' '){
+        	c = get_next_byte(get_next_byte_argument);
+		spaceFlag = 1;
+		continue;
+	}
         switch (c) {
             case '<' :
                 printf("< \n");
+		wordFlag = 0;
 		if(andFlag){
 			printf("Error \n");
 			andFlag = 0;
@@ -41,6 +53,7 @@ make_command_stream (int (*get_next_byte) (void *),
                 break;
             case '>' :
 		printf("> \n");
+		wordFlag = 0;
                 if(andFlag){
 			printf("Error \n");
 			andFlag = 0;
@@ -51,6 +64,7 @@ make_command_stream (int (*get_next_byte) (void *),
                 break;
             case '&' :
 		printf("%c \n", c);
+		wordFlag = 0;
                 if(andFlag){
 			andFlag = 0;
 			printf("And \n");
@@ -64,6 +78,7 @@ make_command_stream (int (*get_next_byte) (void *),
 		break;
             case '|' :
                 printf("%c \n", c);
+		wordFlag = 0;
                 if(andFlag){
 			printf("Error \n");
 			andFlag = 0;
@@ -78,6 +93,7 @@ make_command_stream (int (*get_next_byte) (void *),
                 break;
             case '(' :
                 printf("( \n");
+		wordFlag = 0;
                 if(andFlag){
 			printf("Error \n");
 			andFlag = 0;
@@ -88,6 +104,7 @@ make_command_stream (int (*get_next_byte) (void *),
                 break;
             case ')' :
                 printf(") \n");
+		wordFlag = 0;
                 if(andFlag){
 			printf("Error \n");
 			andFlag = 0;
@@ -97,13 +114,20 @@ make_command_stream (int (*get_next_byte) (void *),
 		}
                 break;
             default :
-                if(andFlag){
+		if(!isalnum(c) || c!='!'|| c!='%'|| c!='+'|| c!=','|| c!='-'|| c!='.'|| c!='/'|| c!=':'|| c!='@'|| c!='^'|| c!='_'){
 			printf("Error \n");
-			andFlag =0;
-		} else if(orFlag){
-			printf("Pipe \n");
-			orFlag = 0;
+		}else{
+			if(andFlag){
+				printf("Error \n");
+				andFlag =0;
+			} else if(orFlag){
+				printf("Pipe \n");
+				orFlag = 0;
+			} else {
+				wordFlag = 1;
+			}			
 		}
+			
                 break;
         }
         c = get_next_byte(get_next_byte_argument);
