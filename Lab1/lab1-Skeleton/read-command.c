@@ -15,8 +15,7 @@
 const int AND_OPERATOR = 0;
 const int OR_OPERATOR = 1;
 const int PIPE_OPERATOR = 2;
-const int REDIRECT_FROM = 3;
-const int REDIRECT_TO = 4;
+const int REDIRECT_FROM = 3; const int REDIRECT_TO = 4;
 const int OPEN_PAREN = 5;
 const int CLOSE_PAREN = 6;
 const int NEWLINE  = 7;
@@ -36,12 +35,11 @@ make_command_stream (int (*get_next_byte) (void *),
      add auxiliary functions and otherwise modify the source code.
      You can also use external functions defined in the GNU C Library.  */
   //error (1, 0, "command reading not yet implemented");	
-    int c = get_next_byte(get_next_byte_argument);
-    int andFlag = 0;
+    int c = get_next_byte(get_next_byte_argument); int andFlag = 0;
     int orFlag = 0;
     int wordFlag = 0;
     int spaceFlag = 0;
-    int size = 100;
+    int size = 100; 
     int wordcount = 0;
     int buffcount = 0;
     char * buff = malloc(sizeof(char) * size);
@@ -49,22 +47,34 @@ make_command_stream (int (*get_next_byte) (void *),
     
     while(c!=EOF){
 	if(c == ' ' && spaceFlag){
-		printf("Skipping \n");
-        	c = get_next_byte(get_next_byte_argument);
+		printf("Skipping \n"); c = get_next_byte(get_next_byte_argument);
 		continue;
-	} else if (c == ' '){
+	} else if (c == ' ' && wordFlag){
+		words[wordcount] = buff; 
+		int i =0;
+		while(i != buffcount){
+		  printf("%c", buff[i]);
+		
+		  i++;
+		}
+		printf("\n");
+		buff = malloc(sizeof(char) * size);
+		wordcount++;
+		buffcount = 0;
         	c = get_next_byte(get_next_byte_argument);
 		spaceFlag = 1;
 		continue;
+	} else if(c == ' ' && !wordFlag){
+        	c = get_next_byte(get_next_byte_argument);
+		continue;
 	}
-	if(spaceFlag && wordFlag){
+	/*if(spaceFlag && wordFlag){
 		words[wordcount] = buff; 
 		buff = malloc(sizeof(char) * size);
 		wordcount++;
-		wordFlag = 0;
 		buffcount = 0;
 		
-	}
+	}*/
 	spaceFlag = 0;
         switch (c) {
             case '<' :
@@ -110,12 +120,31 @@ make_command_stream (int (*get_next_byte) (void *),
             case '&' :
 		printf("%c \n", c);
 		if(wordFlag){
-			printf("WORD \n");
 			wordFlag = 0;
+			int i = 0;
+			int j = 0;
 			words[wordcount] = buff;
-			add_to_stack(-1,words,wordcount);
-			buff = malloc(sizeof(char) * size);
-			words = malloc(sizeof(char *) * size);
+			wordcount++;
+			while(i != buffcount){
+			  printf("%c", buff[i]);
+			
+			  i++;
+			}
+			i = 0;
+			printf("\n");
+			printf("%d \n",wordcount);
+			while(j < wordcount){
+				i = 0;
+				while(words[j][i] != '\0'){
+				  printf("%c", words[j][i]);
+				  i++;
+				}
+				j++;
+			}
+		//	add_to_stack(-1,words,wordcount);
+			printf("WORDS \n");
+			words = malloc(500);
+			buff = malloc(500);
 			wordcount = 0;
 			buffcount = 0;
 		}
@@ -134,13 +163,32 @@ make_command_stream (int (*get_next_byte) (void *),
                 printf("%c \n", c);
 		if(wordFlag){
 			wordFlag = 0;
+			int i = 0;
+			int j = 0;
 			words[wordcount] = buff;
-			add_to_stack(-1,words,wordcount);
+			wordcount++;
+			while(i != buffcount){
+			  printf("%c", buff[i]);
+			
+			  i++;
+			}
+			i = 0;
+			printf("\n");
+			printf("%d \n",wordcount);
+			while(j < wordcount){
+				i = 0;
+				while(words[j][i] != '\0'){
+				  printf("%c", words[j][i]);
+				  i++;
+				}
+				j++;
+			}
+		//	add_to_stack(-1,words,wordcount);
 			buff = malloc(sizeof(char) * size);
+			printf("WORDS \n");
 			words = malloc(sizeof(char *) * size);
 			wordcount = 0;
 			buffcount = 0;
-			printf("WORD \n");
 		}
                 if(andFlag){
 			printf("Error \n");
@@ -149,7 +197,8 @@ make_command_stream (int (*get_next_byte) (void *),
 		} else {
 			if(orFlag){
 				orFlag = 0;
-				add_to_stack(OR_OPERATOR,NULL,-1);
+				printf("FUCKING OR \n");
+				//add_to_stack(OR_OPERATOR,NULL,-1);
 			} else {
 				orFlag = 1;
 			}
@@ -277,19 +326,19 @@ read_command_stream (command_stream_t s)
 
 
 void add_to_stack(int constant, char ** word, int length){
-	command_t cmd = malloc(sizeof(command_t));
+	command_t cmd = malloc(sizeof(100));
 	if(word != NULL){
-/*		cmd->type = AND_COMMAND;
+		cmd->type = SIMPLE_COMMAND;
 		cmd->input = 0;
 		cmd->output = 0;
-		cmd->u.word = malloc(length);
-		*(cmd->u).word = word;
+		cmd->u.word = malloc(sizeof(char*)*length);
+		cmd->u.word = word;
 		int i = 0;
 		while(i != length){
 		  printf("%c", *(cmd->u.word[i]));
 		  i++;
 		}
-		printf("\n");*/
+		printf("\n");
 	}
 	else {
 		if(constant == AND_OPERATOR){
@@ -297,8 +346,7 @@ void add_to_stack(int constant, char ** word, int length){
 			cmd->input = 0;
 			cmd->output = 0;
 			
-			printf("I have an AND \n");
-			
+			printf("I have an AND \n");		
 		} else if(constant == OR_OPERATOR){
 			cmd->type = OR_COMMAND;
 			cmd->input = 0;

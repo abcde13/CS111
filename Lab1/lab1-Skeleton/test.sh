@@ -1,1 +1,1 @@
-aa && aa||!|lab()<>|
+aabb&&aa&&!|lab()<>|
