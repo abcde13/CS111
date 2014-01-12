@@ -47,8 +47,6 @@ make_command_stream (int (*get_next_byte) (void *),
     
     while(1){
 	if(c==EOF){
-		free(buff);
-		free(words);
 		break;
 	}
 	if(c == ' ' && spaceFlag){
@@ -56,46 +54,27 @@ make_command_stream (int (*get_next_byte) (void *),
 		continue;
 	} else if (c == ' ' && wordFlag){
 			wordFlag = 0;
-			int i = 0;
-			int j = 0;
 			words[wordcount] = buff;
 			wordcount++;
 			buff = malloc(sizeof(char) * size);
 			buffcount = 0;
-			printf("%d \n",wordcount);
-			while(j < wordcount){
-				i = 0;
-				while(words[j][i] != '\0'){
-				  printf("%c", words[j][i]);
-				  i++;
-				}
-				j++;
-			}
 			continue;
-		//	add_to_stack(-1,words,wordcount);
 	} else if(c == ' ' && !wordFlag){
         	c = get_next_byte(get_next_byte_argument);
 		continue;
 	}
-	/*if(spaceFlag && wordFlag){
-		words[wordcount] = buff; 
-		buff = malloc(sizeof(char) * size);
-		wordcount++;
-		buffcount = 0;
-		
-	}*/
 	spaceFlag = 0;
         switch (c) {
             case '<' :
 		if(wordFlag){
 			wordFlag = 0;
 			words[wordcount] = buff;
+			wordcount++;
 			add_to_stack(-1,words,wordcount);
 			buff = malloc(sizeof(char) * size);
 			words = malloc(sizeof(char *) * size);
 			wordcount = 0;
 			buffcount = 0;
-			printf("WORD \n");
 		}
 		if(andFlag){
 			printf("Error \n");
@@ -110,12 +89,12 @@ make_command_stream (int (*get_next_byte) (void *),
 		if(wordFlag){
 			wordFlag = 0;
 			words[wordcount] = buff;
+			wordcount++;
 			add_to_stack(-1,words,wordcount);
 			buff = malloc(sizeof(char) * size);
 			words = malloc(sizeof(char *) * size);
 			wordcount = 0;
 			buffcount = 0;
-			printf("WORD \n");
 		}
                 if(andFlag){
 			printf("Error \n");
@@ -168,8 +147,7 @@ make_command_stream (int (*get_next_byte) (void *),
 		} else {
 			if(orFlag){
 				orFlag = 0;
-				printf("FUCKING OR \n");
-				//add_to_stack(OR_OPERATOR,NULL,-1);
+				add_to_stack(OR_OPERATOR,NULL,-1);
 			} else {
 				orFlag = 1;
 			}
@@ -179,12 +157,12 @@ make_command_stream (int (*get_next_byte) (void *),
 		if(wordFlag){
 			wordFlag = 0;
 			words[wordcount] = buff;
+			wordcount++;
 			add_to_stack(-1,words,wordcount);
-			buff = malloc(sizeof(char ) * size);
+			buff = malloc(sizeof(char) * size);
 			words = malloc(sizeof(char *) * size);
 			wordcount = 0;
 			buffcount = 0;
-			printf("WORD \n");
 		}
                 if(andFlag){
 			printf("Error \n");
@@ -199,12 +177,12 @@ make_command_stream (int (*get_next_byte) (void *),
 		if(wordFlag){
 			wordFlag = 0;
 			words[wordcount] = buff;
+			wordcount++;
 			add_to_stack(-1,words,wordcount);
 			buff = malloc(sizeof(char) * size);
 			words = malloc(sizeof(char *) * size);
 			wordcount = 0;
 			buffcount = 0;
-			printf("WORD \n");
 		}
                 if(andFlag){
 			printf("Error \n");
@@ -220,12 +198,12 @@ make_command_stream (int (*get_next_byte) (void *),
 		if(wordFlag){
 			wordFlag = 0;
 			words[wordcount] = buff;
+			wordcount++;
 			add_to_stack(-1,words,wordcount);
 			buff = malloc(sizeof(char) * size);
 			words = malloc(sizeof(char *) * size);
 			wordcount = 0;
 			buffcount = 0;
-			printf("WORD \n");
 		}
 		if(orFlag){
 			add_to_stack(PIPE_OPERATOR,NULL,-1);	
@@ -275,6 +253,14 @@ make_command_stream (int (*get_next_byte) (void *),
 	} else if (andFlag){
 		printf("Error");
 	} else if (wordFlag){
+		wordFlag = 0;
+		words[wordcount] = buff;
+		wordcount++;
+		add_to_stack(-1,words,wordcount);
+		buff = malloc(sizeof(char) * size);
+		words = malloc(sizeof(char *) * size);
+		wordcount = 0;
+		buffcount = 0;
 	}
 	
   return 0;
