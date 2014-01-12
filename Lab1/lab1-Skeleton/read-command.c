@@ -32,6 +32,7 @@ make_command_stream (int (*get_next_byte) (void *),
     
     while(c!=EOF){
 	if(c == ' ' && spaceFlag){
+		printf("Skipping \n");
         	c = get_next_byte(get_next_byte_argument);
 		continue;
 	} else if (c == ' '){
@@ -39,8 +40,9 @@ make_command_stream (int (*get_next_byte) (void *),
 		spaceFlag = 1;
 		continue;
 	}
+	spaceFlag = 0;
         switch (c) {
-            case '<' :
+            /*case '<' :
                 printf("< \n");
 		wordFlag = 0;
 		if(andFlag){
@@ -82,6 +84,7 @@ make_command_stream (int (*get_next_byte) (void *),
                 if(andFlag){
 			printf("Error \n");
 			andFlag = 0;
+			orFlag=1;
 		} else {
 			if(orFlag){
 				orFlag = 0;
@@ -112,9 +115,10 @@ make_command_stream (int (*get_next_byte) (void *),
 			printf("Pipe \n");
 			orFlag = 0;
 		}
-                break;
+                break;*/
             default :
-		if(!isalnum(c) || c!='!'|| c!='%'|| c!='+'|| c!=','|| c!='-'|| c!='.'|| c!='/'|| c!=':'|| c!='@'|| c!='^'|| c!='_'){
+		if(!isalnum(c) && c!='!'&& c!='%' && c!='+'&& c!=',' && c!='-' && c!='.' &&  c!='/'&&  c!=':'&& c!='@'&& c!='^'&& c!='_'){
+			printf("%c \n", c);
 			printf("Error \n");
 		}else{
 			if(andFlag){
@@ -124,6 +128,7 @@ make_command_stream (int (*get_next_byte) (void *),
 				printf("Pipe \n");
 				orFlag = 0;
 			} else {
+				printf("%c \n", c);
 				wordFlag = 1;
 			}			
 		}
