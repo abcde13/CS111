@@ -8,8 +8,10 @@ enum command_type
     PIPE_COMMAND,        // A | B
     SIMPLE_COMMAND,      // a simple command
     START_SUBSHELL_COMMAND, // (A...
-    END_SUBHSELL_COMMAND, // ...B)
+    END_SUBSHELL_COMMAND, // ...B)
     SUBSHELL_COMMAND,    // ( A )
+    NEWLINE_COMMAND,
+    REDIRECT_COMMAND	
   };
 
 // Data associated with a command.

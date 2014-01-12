@@ -15,12 +15,15 @@
 const int AND_OPERATOR = 0;
 const int OR_OPERATOR = 1;
 const int PIPE_OPERATOR = 2;
-const int REDIRECT_FROM = 3; const int REDIRECT_TO = 4;
+const int REDIRECT_FROM = 3;
+const int REDIRECT_TO = 4;
 const int OPEN_PAREN = 5;
 const int CLOSE_PAREN = 6;
 const int NEWLINE  = 7;
-const int SPACE = 8;
+const int SEMICOLON  = 8;
+const int SPACE = 9;
 int place = 0;
+int oplace = 0;
 
 struct command_stream
 {
@@ -52,6 +55,7 @@ make_command_stream (int (*get_next_byte) (void *),
     char * buff = malloc(sizeof(char) * size);
     char ** words = malloc(sizeof(char *) * size);
     operators =  malloc(sizeof(command_t*) * size);
+    operands =  malloc(sizeof(command_t*) * size);
     
     while(1){
 	if(c==EOF){
@@ -220,7 +224,11 @@ make_command_stream (int (*get_next_byte) (void *),
 			printf("Error");
 			andFlag = 0;
 		}  
-		add_to_stack(NEWLINE,NULL,-1);
+		if(c == ';'){
+			add_to_stack(SEMICOLON,NULL,-1);
+		} else {
+			add_to_stack(NEWLINE,NULL,-1);
+		}
 		break;
             default :
 		if(!isalnum(c) && c!='!'&& c!='%' && c!='+'&& c!=',' && c!='-' && c!='.' &&  c!='/'&&  c!=':'&& c!='@'&& c!='^'&& c!='_'){
@@ -304,6 +312,7 @@ void add_to_stack(int constant, char ** word, int length){
 			}
 			j++;
 		}
+		push(cmd,1);
 		printf("\n");
 	}
 	else {
@@ -331,6 +340,9 @@ void add_to_stack(int constant, char ** word, int length){
 		}  else if(constant == REDIRECT_TO){
 			printf("I have an > \n");
 		}  else if(constant == NEWLINE){
+			cmd->type = NEWLINE_COMMAND;
+			printf("I have an newline/; \n");
+		}  else if(constant == SEMICOLON){
 			cmd->type = SEQUENCE_COMMAND;
 			printf("I have an newline/; \n");
 		}  else if(constant == SPACE){
@@ -339,20 +351,36 @@ void add_to_stack(int constant, char ** word, int length){
 			printf("I have an ) \n");
 		}  else if(constant == OPEN_PAREN){
 			printf("I have an ( \n");
+			cmd->type = START_SUBSHELL_COMMAND;
+			cmd->output = 0;
+			cmd->input = 0;
+			push(cmd,0);
+			
 		}
 	}
 }
 
 void push(command_t cmd, int and){
 	if(!and){
-		while(place!=0 && !compareOperator((*(operators[place-1]))->type,cmd->type) ){
+		while((place!=0 && !compareOperator((*(operators[place-1]))->type,cmd->type)) 
+			|| (cmd->type == END_SUBSHELL_COMMAND &&  (*(operators[place-1]))->type!=START_SUBSHELL_COMMAND)){
 			pop(0);
+		}
+		if(cmd->type == END_SUBSHELL_COMMAND){
+			pop(0);
+			return;
 		}
 				
 		operators[place] = &cmd;
 		place++;
 		printf("%d %d \n", cmd->type, place);
-	} 
+	} else {
+		operands[oplace] = &cmd;
+		oplace++;
+		printf("OPERAND %d %d \n", cmd->type, oplace);
+	}
+		
+		
 }
 void pop(int and){
 	if(!and){
@@ -366,7 +394,7 @@ void pop(int and){
 int compareOperator(int first, int second)
 {
     int result = 0;
-    if(second==PIPE_COMMAND || second==START_SUBSHELL_COMMAND)
+    if(second==PIPE_COMMAND || second==START_SUBSHELL_COMMAND || second==REDIRECT_COMMAND)
     {
         result = 1;
     }
