@@ -4,7 +4,7 @@
 #include "command-internals.h"
 #include <stdio.h>
 #include <error.h>
-#include <ctype.h>
+ #include <ctype.h>
 #include <stdlib.h>
 
 /* FIXME: You may need to add #include directives, macro definitions,
@@ -20,6 +20,7 @@ const int OPEN_PAREN = 5;
 const int CLOSE_PAREN = 6;
 const int NEWLINE  = 7;
 const int SPACE = 8;
+int place = 0;
 
 struct command_stream
 {
@@ -28,6 +29,9 @@ struct command_stream
 
 void add_to_stack(int constant, char ** word, int length);
 int compareOperator(int first, int second);
+void pop();
+void push(command_t cmd);
+command_t ** operators;
 
 command_stream_t
 make_command_stream (int (*get_next_byte) (void *),
@@ -36,16 +40,17 @@ make_command_stream (int (*get_next_byte) (void *),
   /* FIXME: Replace this with your implementation.  You may need to
      add auxiliary functions and otherwise modify the source code.
      You can also use external functions defined in the GNU C Library.  */
-  //error (1, 0, "command reading not yet implemented");	
+  //error (1, 0, "command reading not yet implemented");	 
     int c = get_next_byte(get_next_byte_argument); int andFlag = 0;
     int orFlag = 0;
     int wordFlag = 0;
     int spaceFlag = 0;
-    int size = 100; 
     int wordcount = 0;
+    int size = 100; 
     int buffcount = 0;
     char * buff = malloc(sizeof(char) * size);
     char ** words = malloc(sizeof(char *) * size);
+    operators =  malloc(sizeof(command_t*) * size);
     
     while(1){
 	if(c==EOF){
@@ -305,16 +310,20 @@ void add_to_stack(int constant, char ** word, int length){
 			cmd->type = AND_COMMAND;
 			cmd->output = 0;
 			cmd->input = 0;
+			
+			push(cmd);
 			printf("I have an AND \n");		
 		} else if(constant == OR_OPERATOR){
 			cmd->type = OR_COMMAND;
 			cmd->output = 0;
 			cmd->input = 0;
+			push(cmd);
 			printf("I have an OR \n");
 		} else if(constant == PIPE_OPERATOR){
 			cmd->type = PIPE_COMMAND;
 			cmd->output = 0;
 			cmd->input = 0;
+			push(cmd);
 			printf("I have an PIPE \n");
 		}  else if(constant == REDIRECT_FROM){
 			printf("I have an < \n");
@@ -333,6 +342,22 @@ void add_to_stack(int constant, char ** word, int length){
 	}
 }
 
+void push(command_t cmd){
+	while(place!=0 && !compareOperator((*(operators[place-1]))->type,cmd->type) ){
+		pop();
+	}
+			
+	operators[place] = &cmd;
+	place++;
+	printf("%d %d \n", cmd->type, place);
+}
+void pop(){
+	free (operators[place]);
+	place--;
+	printf("%d Pop \n", place);
+	
+}
+
 int compareOperator(int first, int second)
 {
     int result = 0;
@@ -340,7 +365,7 @@ int compareOperator(int first, int second)
     {
         result = 1;
     }
-    else if(second=SEQUENCE_COMMAND)
+    else if(second==SEQUENCE_COMMAND)
     {
         result = 1;
     }
