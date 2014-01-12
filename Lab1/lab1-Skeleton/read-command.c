@@ -60,7 +60,6 @@ make_command_stream (int (*get_next_byte) (void *),
 		add_to_stack(-1,buff,buffcount);
 		wordFlag = 0;
 		buffcount = 0;
-		printf("WORD \n");
 		add_to_stack(SPACE,NULL,-1);
 		
 	}
@@ -69,11 +68,7 @@ make_command_stream (int (*get_next_byte) (void *),
             case '<' :
 		if(wordFlag){
 			wordFlag = 0;
-			int i = 0;
-			while(i != buffcount){
-			  printf("%c", buff[i]);
-			  i++;
-			}
+			add_to_stack(-1,buff,buffcount);
 			buffcount = 0;
 			printf("WORD \n");
 		}
@@ -89,11 +84,7 @@ make_command_stream (int (*get_next_byte) (void *),
             case '>' :
 		if(wordFlag){
 			wordFlag = 0;
-			int i = 0;
-			while(i != buffcount){
-			  printf("%c", buff[i]);
-			  i++;
-			}
+			add_to_stack(-1,buff,buffcount);
 			buffcount = 0;
 			printf("WORD \n");
 		}
@@ -110,13 +101,8 @@ make_command_stream (int (*get_next_byte) (void *),
 		printf("%c \n", c);
 		if(wordFlag){
 			wordFlag = 0;
-			int i = 0;
-			while(i != buffcount){
-			  printf("%c", buff[i]);
-			  i++;
-			}
+			add_to_stack(-1,buff,buffcount);
 			buffcount = 0;
-			printf("WORD \n");
 		}
                 if(andFlag){
 			andFlag = 0;
@@ -133,13 +119,8 @@ make_command_stream (int (*get_next_byte) (void *),
                 printf("%c \n", c);
 		if(wordFlag){
 			wordFlag = 0;
-			int i = 0;
-			while(i != buffcount){
-			  printf("%c", buff[i]);
-			  i++;
-			}
+			add_to_stack(-1,buff,buffcount);
 			buffcount = 0;
-			printf("WORD \n");
 		}
                 if(andFlag){
 			printf("Error \n");
@@ -157,13 +138,8 @@ make_command_stream (int (*get_next_byte) (void *),
             case '(' :
 		if(wordFlag){
 			wordFlag = 0;
-			int i = 0;
-			while(i != buffcount){
-			  printf("%c", buff[i]);
-			  i++;
-			}
+			add_to_stack(-1,buff,buffcount);
 			buffcount = 0;
-			printf("WORD \n");
 		}
                 if(andFlag){
 			printf("Error \n");
@@ -177,13 +153,8 @@ make_command_stream (int (*get_next_byte) (void *),
             case ')' :
 		if(wordFlag){
 			wordFlag = 0;
-			int i = 0;
-			while(i != buffcount){
-			  printf("%c", buff[i]);
-			  i++;
-			}
+			add_to_stack(-1,buff,buffcount);
 			buffcount = 0;
-			printf("WORD \n");
 		}
                 if(andFlag){
 			printf("Error \n");
@@ -198,13 +169,8 @@ make_command_stream (int (*get_next_byte) (void *),
 	    case ';':
 		if(wordFlag){
 			wordFlag = 0;
-			int i = 0;
-			while(i != buffcount){
-			  printf("%c", buff[i]);
-			  i++;
-			}
+			add_to_stack(-1,buff,buffcount);
 			buffcount = 0;
-			printf("WORD \n");
 		}
 		if(orFlag){
 			add_to_stack(PIPE_OPERATOR,NULL,-1);	
