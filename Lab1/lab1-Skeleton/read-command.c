@@ -361,11 +361,7 @@ void pop(){
 int compareOperator(int first, int second)
 {
     int result = 0;
-    if(first==PIPE_COMMAND)
-    {
-        result = 1;
-    }
-    else if(second==SEQUENCE_COMMAND)
+    if(second==PIPE_COMMAND)
     {
         result = 1;
     }
