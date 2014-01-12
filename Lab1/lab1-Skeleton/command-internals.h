@@ -7,6 +7,8 @@ enum command_type
     OR_COMMAND,          // A || B
     PIPE_COMMAND,        // A | B
     SIMPLE_COMMAND,      // a simple command
+    START_SUBSHELL_COMMAND, // (A...
+    END_SUBHSELL_COMMAND, // ...B)
     SUBSHELL_COMMAND,    // ( A )
   };
 

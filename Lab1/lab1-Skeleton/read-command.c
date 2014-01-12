@@ -29,9 +29,10 @@ struct command_stream
 
 void add_to_stack(int constant, char ** word, int length);
 int compareOperator(int first, int second);
-void pop();
-void push(command_t cmd);
+void pop(int and);
+void push(command_t cmd, int and);
 command_t ** operators;
+command_t ** operands;
 
 command_stream_t
 make_command_stream (int (*get_next_byte) (void *),
@@ -311,19 +312,19 @@ void add_to_stack(int constant, char ** word, int length){
 			cmd->output = 0;
 			cmd->input = 0;
 			
-			push(cmd);
+			push(cmd,0);
 			printf("I have an AND \n");		
 		} else if(constant == OR_OPERATOR){
 			cmd->type = OR_COMMAND;
 			cmd->output = 0;
 			cmd->input = 0;
-			push(cmd);
+			push(cmd,0);
 			printf("I have an OR \n");
 		} else if(constant == PIPE_OPERATOR){
 			cmd->type = PIPE_COMMAND;
 			cmd->output = 0;
 			cmd->input = 0;
-			push(cmd);
+			push(cmd,0);
 			printf("I have an PIPE \n");
 		}  else if(constant == REDIRECT_FROM){
 			printf("I have an < \n");
@@ -342,26 +343,30 @@ void add_to_stack(int constant, char ** word, int length){
 	}
 }
 
-void push(command_t cmd){
-	while(place!=0 && !compareOperator((*(operators[place-1]))->type,cmd->type) ){
-		pop();
-	}
-			
-	operators[place] = &cmd;
-	place++;
-	printf("%d %d \n", cmd->type, place);
+void push(command_t cmd, int and){
+	if(!and){
+		while(place!=0 && !compareOperator((*(operators[place-1]))->type,cmd->type) ){
+			pop(0);
+		}
+				
+		operators[place] = &cmd;
+		place++;
+		printf("%d %d \n", cmd->type, place);
+	} 
 }
-void pop(){
-	free (operators[place]);
-	place--;
-	printf("%d Pop \n", place);
+void pop(int and){
+	if(!and){
+		free (operators[place]);
+		place--;
+		printf("%d Pop \n", place);
+	}
 	
 }
 
 int compareOperator(int first, int second)
 {
     int result = 0;
-    if(second==PIPE_COMMAND)
+    if(second==PIPE_COMMAND || second==START_SUBSHELL_COMMAND)
     {
         result = 1;
     }
