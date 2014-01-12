@@ -26,7 +26,9 @@ struct command_stream
     command_t **forest_pointer;
 };
 
-void add_to_stack(int constant, char ** word, int length); 
+void add_to_stack(int constant, char ** word, int length);
+int compareOperator(int first, int second);
+
 command_stream_t
 make_command_stream (int (*get_next_byte) (void *),
 		     void *get_next_byte_argument)
@@ -329,5 +331,19 @@ void add_to_stack(int constant, char ** word, int length){
 			printf("I have an ( \n");
 		}
 	}
+}
+
+int compareOperator(int first, int second)
+{
+    int result = 0;
+    if(first==PIPE_COMMAND)
+    {
+        result = 1;
+    }
+    else if(second=SEQUENCE_COMMAND)
+    {
+        result = 1;
+    }
+    return result;
 }
 		
