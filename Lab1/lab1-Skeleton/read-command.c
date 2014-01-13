@@ -36,6 +36,7 @@ void pop(int and);
 void push(command_t cmd, int and);
 command_t ** operators;
 command_t ** operands;
+void createTree(command_t  operator, command_t  operandRight, command_t  operandLeft);
 
 command_stream_t
 make_command_stream (int (*get_next_byte) (void *),
@@ -62,7 +63,7 @@ make_command_stream (int (*get_next_byte) (void *),
 		break;
 	}
 	if(c == ' ' && spaceFlag){
-		printf("Skipping \n"); c = get_next_byte(get_next_byte_argument);
+		//printf("Skipping \n"); c = get_next_byte(get_next_byte_argument);
 		continue;
 	} else if (c == ' ' && wordFlag){
 			words[wordcount] = buff;
@@ -89,7 +90,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			buffcount = 0;
 		}
 		if(andFlag){
-			printf("Error \n");
+			//printf("Error \n");
 			andFlag = 0;
 		} else if(orFlag){
 			orFlag = 0;
@@ -109,7 +110,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			buffcount = 0;
 		}
                 if(andFlag){
-			printf("Error \n");
+			//printf("Error \n");
 			andFlag = 0;
 		} else if(orFlag){
 			add_to_stack(PIPE_OPERATOR,NULL,-1);
@@ -118,7 +119,7 @@ make_command_stream (int (*get_next_byte) (void *),
 		add_to_stack(REDIRECT_TO,NULL,-1);
                 break;
             case '&' :
-		printf("%c \n", c);
+		//printf("%c \n", c);
 		if(wordFlag){
 			wordFlag = 0;
 			words[wordcount] = buff;
@@ -141,7 +142,7 @@ make_command_stream (int (*get_next_byte) (void *),
 		}
 		break;
             case '|' :
-                printf("%c \n", c);
+                //printf("%c \n", c);
 		if(wordFlag){
 			wordFlag = 0;
 			words[wordcount] = buff;
@@ -153,7 +154,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			buffcount = 0;
 		}
                 if(andFlag){
-			printf("Error \n");
+			//printf("Error \n");
 			andFlag = 0;
 			orFlag=1;
 		} else {
@@ -177,7 +178,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			buffcount = 0;
 		}
                 if(andFlag){
-			printf("Error \n");
+			//printf("Error \n");
 			andFlag = 0;
 		} else if(orFlag){
 			add_to_stack(PIPE_OPERATOR,NULL,-1);
@@ -197,7 +198,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			buffcount = 0;
 		}
                 if(andFlag){
-			printf("Error \n");
+			//printf("Error \n");
 			andFlag = 0;
 		} else if(orFlag) {
 			add_to_stack(PIPE_OPERATOR,NULL,-1);
@@ -221,7 +222,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			add_to_stack(PIPE_OPERATOR,NULL,-1);	
 			orFlag = 0;
 		} else if (andFlag){
-			printf("Error");
+			//printf("Error");
 			andFlag = 0;
 		}  
 		if(c == ';'){
@@ -232,15 +233,15 @@ make_command_stream (int (*get_next_byte) (void *),
 		break;
             default :
 		if(!isalnum(c) && c!='!'&& c!='%' && c!='+'&& c!=',' && c!='-' && c!='.' &&  c!='/'&&  c!=':'&& c!='@'&& c!='^'&& c!='_'){
-			printf("Error \n");
+			//printf("Error \n");
 		}else{
 			if(andFlag){
-				printf("Error \n");
+				//printf("Error \n");
 				andFlag =0;
 			} else if(orFlag){
 				add_to_stack(PIPE_OPERATOR,NULL,-1);
 				orFlag = 0;
-				printf("%c \n", c);
+				//printf("%c \n", c);
 				if(buffcount == size){
 					size = size + 100;
 					buff = realloc(buff,sizeof(size));
@@ -249,7 +250,7 @@ make_command_stream (int (*get_next_byte) (void *),
 				buffcount++;
 				wordFlag = 1;
 			} else {
-				printf("%c \n", c);
+				//printf("%c \n", c);
 				if(buffcount == size){
 					size = size + 100;
 					buff = realloc(buff,sizeof(size));
@@ -264,10 +265,11 @@ make_command_stream (int (*get_next_byte) (void *),
         }
         c = get_next_byte(get_next_byte_argument);
     }
+	
 	if(orFlag){
 		add_to_stack(PIPE_OPERATOR,NULL,-1);	
 	} else if (andFlag){
-		printf("Error");
+		//printf("Error");
 	} else if (wordFlag){
 		wordFlag = 0;
 		words[wordcount] = buff;
@@ -296,64 +298,61 @@ void add_to_stack(int constant, char ** word, int length){
 	command_t cmd = malloc(sizeof(100));
 	cmd->output = malloc(sizeof(char*));
 	cmd->input = malloc(sizeof(char*));
+	cmd->output = 0;
+	cmd->input = 0;
 	if(word != NULL){
 		cmd->type = SIMPLE_COMMAND;
 		cmd->u.word = malloc(sizeof(char*)*length);
 		cmd->u.word = word;
-		cmd->output = 0;
-		cmd->input = 0;
 		int i = 0;
 		int j = 0;
 		while(j!= length){
 			i = 0;
 			while((cmd->u.word[j])[i] != '\0'){
-		  		printf("%c ", (cmd->u.word[j])[i]);
+		  		//printf("%c ", (cmd->u.word[j])[i]);
 		  		i++;
 			}
 			j++;
 		}
 		push(cmd,1);
-		printf("\n");
+		//printf("\n");
 	}
 	else {
 		if(constant == AND_OPERATOR){
 			cmd->type = AND_COMMAND;
-			cmd->output = 0;
-			cmd->input = 0;
 			
 			push(cmd,0);
-			printf("I have an AND \n");		
+			//printf("I have an AND \n");		
 		} else if(constant == OR_OPERATOR){
 			cmd->type = OR_COMMAND;
-			cmd->output = 0;
-			cmd->input = 0;
 			push(cmd,0);
-			printf("I have an OR \n");
+			//printf("I have an OR \n");
 		} else if(constant == PIPE_OPERATOR){
 			cmd->type = PIPE_COMMAND;
-			cmd->output = 0;
-			cmd->input = 0;
 			push(cmd,0);
-			printf("I have an PIPE \n");
+			//printf("I have an PIPE \n");
 		}  else if(constant == REDIRECT_FROM){
-			printf("I have an < \n");
+			cmd->type = REDIRECT_COMMAND;
+			push(cmd,0);
+			//printf("I have an < \n");
 		}  else if(constant == REDIRECT_TO){
-			printf("I have an > \n");
+			cmd->type = REDIRECT_COMMAND;
+			push(cmd,0);
+			//printf("I have an > \n");
 		}  else if(constant == NEWLINE){
 			cmd->type = NEWLINE_COMMAND;
-			printf("I have an newline/; \n");
+			//printf("I have an newline/; \n");
+			push(cmd,0);
 		}  else if(constant == SEMICOLON){
 			cmd->type = SEQUENCE_COMMAND;
-			printf("I have an newline/; \n");
+			//printf("I have an semicolon/; \n");
 		}  else if(constant == SPACE){
-			printf("I have an space \n");
+			//printf("I have an space \n");
 		}  else if(constant == CLOSE_PAREN){
-			printf("I have an ) \n");
+			//printf("I have an ) \n");
 		}  else if(constant == OPEN_PAREN){
-			printf("I have an ( \n");
+			//printf("I have an ( \n");
 			cmd->type = START_SUBSHELL_COMMAND;
-			cmd->output = 0;
-			cmd->input = 0;
 			push(cmd,0);
 			
 		}
@@ -362,9 +361,17 @@ void add_to_stack(int constant, char ** word, int length){
 
 void push(command_t cmd, int and){
 	if(!and){
+		if(place!=0 && (*(operators[place-1]))->type == NEWLINE_COMMAND){
+			//printf("GOTTA DO NEWLNE SHIT");
+			pop(0);
+		} else if (place!=0 && cmd->type != START_SUBSHELL_COMMAND && (*(operators[place-1]))->type == REDIRECT_COMMAND){
+			//printf("SYNTAX BAD. GOTTA DO REDIRECT SHIT");
+		}
 		while((place!=0 && !compareOperator((*(operators[place-1]))->type,cmd->type)) 
 			|| (cmd->type == END_SUBSHELL_COMMAND &&  (*(operators[place-1]))->type!=START_SUBSHELL_COMMAND)){
-			pop(0);
+			//printf("HI \n");
+			//printf("oplace: %d place %d \n", oplace, place);
+			createTree(*(operators[place-1]), *(operands[oplace-1]),*(operands[oplace-2]));
 		}
 		if(cmd->type == END_SUBSHELL_COMMAND){
 			pop(0);
@@ -373,31 +380,47 @@ void push(command_t cmd, int and){
 				
 		operators[place] = &cmd;
 		place++;
-		printf("%d %d \n", cmd->type, place);
+		//printf("%d %d \n", cmd->type, place);
 	} else {
 		operands[oplace] = &cmd;
 		oplace++;
-		printf("OPERAND %d %d \n", cmd->type, oplace);
+		//printf("OPERAND %d %d \n", cmd->type, oplace);
 	}
 		
 		
 }
 void pop(int and){
 	if(!and){
-		free (operators[place]);
+//		free(operators[place]);	
+		operators[place] = 0;
 		place--;
-		printf("%d Pop \n", place);
+		//printf("%d Popped operator \n", place);
+	} else {
+//		free(operands[oplace]);	
+		operands[oplace] = 0;
+		oplace--;
+		//printf("%d Popped operand \n", oplace);
 	}
+
 	
 }
 
 int compareOperator(int first, int second)
 {
     int result = 0;
-    if(second==PIPE_COMMAND || second==START_SUBSHELL_COMMAND || second==REDIRECT_COMMAND)
+    if(second==PIPE_COMMAND || second==START_SUBSHELL_COMMAND || second == NEWLINE_COMMAND || second==REDIRECT_COMMAND)
     {
         result = 1;
     }
     return result;
 }
 		
+
+void createTree(command_t  operator, command_t  operandRight, command_t  operandLeft){
+	//printf("HI \n");
+	operator->u.command[0] = operandLeft;	
+	operator->u.command[1] = operandRight;	
+	*(operands[oplace-2]) = operator;
+	pop(1);
+	pop(0);	
+}

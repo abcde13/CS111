@@ -1,1 +1,2 @@
-aa && bb && k || tt <> 8 s s ()
+aa && bb && k 
+|| tt <> 8 s s ()
