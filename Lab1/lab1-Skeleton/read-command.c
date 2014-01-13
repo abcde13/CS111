@@ -277,6 +277,11 @@ make_command_stream (int (*get_next_byte) (void *),
 		wordcount = 0;
 		buffcount = 0;
 	}
+
+	while(place != 0){
+		printf("CLEARING");
+		createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
+	}
 	
 	print_command((operands[oplace-1]));
 	//print_command(oper
@@ -431,8 +436,8 @@ int compareOperator(int first, int second)
 		
 
 void createTree(command_t * operator, command_t * operandRight, command_t*  operandLeft){
-	(*(operator))->u.command[0] = *operandLeft;	
-	(*(operator))->u.command[1] = *operandRight;	
+	(*(operator))->u.command[1] = *operandLeft;	
+	(*(operator))->u.command[0] = *operandRight;	
 	(operands[oplace-2]) = *operator;
 	print_command((operands[oplace-2]));
 	pop(1);
