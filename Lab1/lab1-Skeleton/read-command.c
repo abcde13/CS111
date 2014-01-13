@@ -1,8 +1,8 @@
-// UCLA CS 111 Lab 1 command reading
+ // UCLA CS 111 Lab 1 command reading
 
 #include "command.h" 
 #include "command-internals.h"
-#include <stdio.h>
+#include <stdio.h> 
 #include <error.h>
  #include <ctype.h>
 #include <stdlib.h>
@@ -11,13 +11,10 @@
    static function definitions, etc.  */
 /* FIXME: Define the type 'struct command_stream' here.  This should
    complete the incomplete type declaration in command.h.  */
-
-const int AND_OPERATOR = 0;
-const int OR_OPERATOR = 1;
+const int AND_OPERATOR = 0; const int OR_OPERATOR = 1;
 const int PIPE_OPERATOR = 2;
 const int REDIRECT_FROM = 3;
-const int REDIRECT_TO = 4;
-const int OPEN_PAREN = 5;
+const int REDIRECT_TO = 4; const int OPEN_PAREN = 5;
 const int CLOSE_PAREN = 6;
 const int NEWLINE  = 7;
 const int SEMICOLON  = 8;
@@ -33,10 +30,10 @@ struct command_stream
 void add_to_stack(int constant, char ** word, int length);
 int compareOperator(int first, int second);
 void pop(int and);
-void push(command_t cmd, int and);
-command_t ** operators;
-command_t ** operands;
-void createTree(command_t  operator, command_t  operandRight, command_t  operandLeft);
+void push(command_t* cmd, int and);
+command_t * operators;
+command_t * operands;
+void createTree(command_t * operator, command_t * operandRight, command_t  *operandLeft);
 
 command_stream_t
 make_command_stream (int (*get_next_byte) (void *),
@@ -314,39 +311,46 @@ void add_to_stack(int constant, char ** word, int length){
 			}
 			j++;
 		}
-		push(cmd,1);
+		command_t * k = &cmd;
+		push(k,1);
 		//printf("\n");
 	}
 	else {
 		if(constant == AND_OPERATOR){
 			cmd->type = AND_COMMAND;
-			printf("TYPE: %d \n",cmd->type);
+			command_t * k = &cmd;
 			
-			push(cmd,0);
+			push(k,0);
 			//printf("I have an AND \n");		
 		} else if(constant == OR_OPERATOR){
 			cmd->type = OR_COMMAND;
-			printf("TYPE: %d \n",cmd->type);
-			push(cmd,0);
+			command_t * k = &cmd;
+			push(k,0);
 			//printf("I have an OR \n");
-		} else if(constant == PIPE_OPERATOR){
+		}
+		 else if(constant == PIPE_OPERATOR){
 			cmd->type = PIPE_COMMAND;
-			push(cmd,0);
+			command_t * k = &cmd;
+			push(k,0);
 			//printf("I have an PIPE \n");
 		}  else if(constant == REDIRECT_FROM){
 			cmd->type = REDIRECT_COMMAND;
-			push(cmd,0);
+			command_t * k = &cmd;
+			push(k,0);
 			//printf("I have an < \n");
 		}  else if(constant == REDIRECT_TO){
 			cmd->type = REDIRECT_COMMAND;
-			push(cmd,0);
+			command_t * k = &cmd;
+			push(k,0);
 			//printf("I have an > \n");
 		}  else if(constant == NEWLINE){
 			cmd->type = NEWLINE_COMMAND;
+			command_t * k = &cmd;
 			//printf("I have an newline/; \n");
-			push(cmd,0);
+			push(k,0);
 		}  else if(constant == SEMICOLON){
 			cmd->type = SEQUENCE_COMMAND;
+			command_t * k = &cmd;
 			//printf("I have an semicolon/; \n");
 		}  else if(constant == SPACE){
 			//printf("I have an space \n");
@@ -355,38 +359,41 @@ void add_to_stack(int constant, char ** word, int length){
 		}  else if(constant == OPEN_PAREN){
 			//printf("I have an ( \n");
 			cmd->type = START_SUBSHELL_COMMAND;
-			push(cmd,0);
+			command_t * k = &cmd;
+			push(k,0);
 			
 		}
 	}
 }
 
-void push(command_t cmd, int and){
+void push(command_t * cmd, int and){
+	printf("%p and type %d \n", *cmd, (*cmd)->type);
 	if(!and){
-		if(place!=0 && (*(operators[place-1]))->type == NEWLINE_COMMAND){
+		if(place!=0 && (*(operators[place-1])).type == NEWLINE_COMMAND){
 //			printf("GOTTA DO NEWLNE SHIT");
 			pop(0);
-		} else if (place!=0 && cmd->type != START_SUBSHELL_COMMAND && (*(operators[place-1]))->type == REDIRECT_COMMAND){
+		} else if (place!=0 && (*(*cmd)).type != START_SUBSHELL_COMMAND && (*(operators[place-1])).type == REDIRECT_COMMAND){
 			//printf("SYNTAX BAD. GOTTA DO REDIRECT SHIT");
 		}
-		while((place!=0 && !compareOperator((*(operators[place-1]))->type,cmd->type)) 
-			|| (cmd->type == END_SUBSHELL_COMMAND &&  (*(operators[place-1]))->type!=START_SUBSHELL_COMMAND)){
+		while((place!=0 && !compareOperator((*(operators[place-1])).type,(*(*cmd)).type)) 
+			|| ((*(*cmd)).type == END_SUBSHELL_COMMAND &&  (*(operators[place-1])).type!=START_SUBSHELL_COMMAND)){
 			//printf("HI \n");
 			//printf("oplace: %d place %d \n", oplace, place);
-			printf("BEFORE: %d \n", (*(operators[place-1]))->type);
-			createTree(*(operators[place-1]), *(operands[oplace-1]),*(operands[oplace-2]));
+			printf("bottom of stack: %d \n ",(*(operators[0])).type);
+			createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
 		}
-		if(cmd->type == END_SUBSHELL_COMMAND){
+		if((*(*cmd)).type == END_SUBSHELL_COMMAND){
 			pop(0);
 			return;
 		}
 				
-		operators[place] = &cmd;
+		operators[place] = *cmd;
 		place++;
-		printf("IN STACK: %d \n",(*(operators[place-1]))->type);
+		printf("bottom of pushed stack: %d \n ",(*(operators[0])).type);
+		printf("TYPE: %d \n",(*cmd)->type);
 		//printf("%d %d \n", cmd->type, place);
 	} else {
-		operands[oplace] = &cmd;
+		operands[oplace] = *cmd;
 		oplace++;
 		//printf("OPERAND %d %d \n", cmd->type, oplace);
 	}
@@ -396,7 +403,8 @@ void push(command_t cmd, int and){
 void pop(int and){
 	if(!and){
 //		free(operators[place]);	
-		operators[place] = 0;
+		printf("popping: %d  place: %d \n",(*(operators[place-1])).type, place);
+		operators[place-1] = 0;
 		place--;
 		//printf("%d Popped operator \n", place);
 	} else {
@@ -420,11 +428,12 @@ int compareOperator(int first, int second)
 }
 		
 
-void createTree(command_t  operator, command_t  operandRight, command_t  operandLeft){
-	operator->u.command[0] = operandLeft;	
-	operator->u.command[1] = operandRight;	
-	*(operands[oplace-2]) = operator;
+void createTree(command_t * operator, command_t * operandRight, command_t*  operandLeft){
+	(*(operator))->u.command[0] = *operandLeft;	
+	(*(operator))->u.command[1] = *operandRight;	
+	(operands[oplace-2]) = *operator;
 	pop(1);
 	pop(0);	
-	print_command(operator);
+	printf("%p \n", &operator);
+	print_command(*operator);
 }
