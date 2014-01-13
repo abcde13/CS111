@@ -9,6 +9,7 @@
 static void
 command_indented_print (int indent, command_t c)
 {
+  printf("PRINTING \n");	
   switch (c->type)
     {
     case AND_COMMAND:

@@ -417,10 +417,11 @@ int compareOperator(int first, int second)
 		
 
 void createTree(command_t  operator, command_t  operandRight, command_t  operandLeft){
-	//printf("HI \n");
 	operator->u.command[0] = operandLeft;	
 	operator->u.command[1] = operandRight;	
 	*(operands[oplace-2]) = operator;
 	pop(1);
 	pop(0);	
+	printf("HI \n");
+	print_command(*(operands[oplace-1]));
 }
