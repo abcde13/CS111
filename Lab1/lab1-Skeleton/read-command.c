@@ -278,6 +278,8 @@ make_command_stream (int (*get_next_byte) (void *),
 		buffcount = 0;
 	}
 	
+	print_command((operands[oplace-1]));
+	//print_command(oper
   return 0;
 }
 
@@ -379,7 +381,7 @@ void push(command_t * cmd, int and){
 			|| ((*(*cmd)).type == END_SUBSHELL_COMMAND &&  (*(operators[place-1])).type!=START_SUBSHELL_COMMAND)){
 			//printf("HI \n");
 			//printf("oplace: %d place %d \n", oplace, place);
-			printf("bottom of stack: %d \n ",(*(operators[0])).type);
+//			printf("bottom of stack: %d \n ",(*(operators[0])).type);
 			createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
 		}
 		if((*(*cmd)).type == END_SUBSHELL_COMMAND){
@@ -389,8 +391,8 @@ void push(command_t * cmd, int and){
 				
 		operators[place] = *cmd;
 		place++;
-		printf("bottom of pushed stack: %d \n ",(*(operators[0])).type);
-		printf("TYPE: %d \n",(*cmd)->type);
+//		printf("bottom of pushed stack: %d \n ",(*(operators[0])).type);
+//		printf("TYPE: %d \n",(*cmd)->type);
 		//printf("%d %d \n", cmd->type, place);
 	} else {
 		operands[oplace] = *cmd;
@@ -403,7 +405,7 @@ void push(command_t * cmd, int and){
 void pop(int and){
 	if(!and){
 //		free(operators[place]);	
-		printf("popping: %d  place: %d \n",(*(operators[place-1])).type, place);
+//		printf("popping: %d  place: %d \n",(*(operators[place-1])).type, place);
 		operators[place-1] = 0;
 		place--;
 		//printf("%d Popped operator \n", place);
@@ -432,8 +434,7 @@ void createTree(command_t * operator, command_t * operandRight, command_t*  oper
 	(*(operator))->u.command[0] = *operandLeft;	
 	(*(operator))->u.command[1] = *operandRight;	
 	(operands[oplace-2]) = *operator;
+	print_command((operands[oplace-2]));
 	pop(1);
 	pop(0);	
-	printf("%p \n", &operator);
-	print_command(*operator);
 }

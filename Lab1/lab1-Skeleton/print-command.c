@@ -53,7 +53,7 @@ command_indented_print (int indent, command_t c)
 void
 print_command (command_t c)
 {
-  printf("%d ", c->type);	
+  //printf("%d ", c->type);	
   command_indented_print (2, c);
   putchar ('\n');
 }
