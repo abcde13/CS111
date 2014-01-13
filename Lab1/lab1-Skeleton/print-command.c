@@ -9,7 +9,6 @@
 static void
 command_indented_print (int indent, command_t c)
 {
-  printf("PRINTING \n");	
   switch (c->type)
     {
     case AND_COMMAND:
@@ -17,6 +16,7 @@ command_indented_print (int indent, command_t c)
     case OR_COMMAND:
     case PIPE_COMMAND:
       {
+//  	printf("%d ", c->type);	
 	command_indented_print (indent + 2 * (c->u.command[0]->type != c->type),
 				c->u.command[0]);
 	static char const command_label[][3] = { "&&", ";", "||", "|" };
@@ -42,8 +42,6 @@ command_indented_print (int indent, command_t c)
       break;
 
     default:
-      printf("ABORTING \n");	
-	
       abort ();
     }
 

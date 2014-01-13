@@ -320,11 +320,13 @@ void add_to_stack(int constant, char ** word, int length){
 	else {
 		if(constant == AND_OPERATOR){
 			cmd->type = AND_COMMAND;
+			printf("TYPE: %d \n",cmd->type);
 			
 			push(cmd,0);
 			//printf("I have an AND \n");		
 		} else if(constant == OR_OPERATOR){
 			cmd->type = OR_COMMAND;
+			printf("TYPE: %d \n",cmd->type);
 			push(cmd,0);
 			//printf("I have an OR \n");
 		} else if(constant == PIPE_OPERATOR){
@@ -362,7 +364,7 @@ void add_to_stack(int constant, char ** word, int length){
 void push(command_t cmd, int and){
 	if(!and){
 		if(place!=0 && (*(operators[place-1]))->type == NEWLINE_COMMAND){
-			//printf("GOTTA DO NEWLNE SHIT");
+//			printf("GOTTA DO NEWLNE SHIT");
 			pop(0);
 		} else if (place!=0 && cmd->type != START_SUBSHELL_COMMAND && (*(operators[place-1]))->type == REDIRECT_COMMAND){
 			//printf("SYNTAX BAD. GOTTA DO REDIRECT SHIT");
@@ -371,6 +373,7 @@ void push(command_t cmd, int and){
 			|| (cmd->type == END_SUBSHELL_COMMAND &&  (*(operators[place-1]))->type!=START_SUBSHELL_COMMAND)){
 			//printf("HI \n");
 			//printf("oplace: %d place %d \n", oplace, place);
+			printf("BEFORE: %d \n", (*(operators[place-1]))->type);
 			createTree(*(operators[place-1]), *(operands[oplace-1]),*(operands[oplace-2]));
 		}
 		if(cmd->type == END_SUBSHELL_COMMAND){
@@ -380,6 +383,7 @@ void push(command_t cmd, int and){
 				
 		operators[place] = &cmd;
 		place++;
+		printf("IN STACK: %d \n",(*(operators[place-1]))->type);
 		//printf("%d %d \n", cmd->type, place);
 	} else {
 		operands[oplace] = &cmd;
@@ -422,6 +426,5 @@ void createTree(command_t  operator, command_t  operandRight, command_t  operand
 	*(operands[oplace-2]) = operator;
 	pop(1);
 	pop(0);	
-	printf("HI \n");
-	print_command(*(operands[oplace-1]));
+	print_command(operator);
 }
