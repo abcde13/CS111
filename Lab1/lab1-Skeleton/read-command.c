@@ -25,7 +25,7 @@ int addedLast = 0;
 
 struct command_stream
 {
-    command_t **forest_pointer;
+    command_t *forest_pointer;
 };
 
 void add_to_stack(int constant, char ** word, int length);
@@ -356,11 +356,15 @@ void add_to_stack(int constant, char ** word, int length){
 		}  else if(constant == SEMICOLON){
 			cmd->type = SEQUENCE_COMMAND;
 			command_t * k = &cmd;
+			push(k,0);
 			//printf("I have an semicolon/; \n");
 		}  else if(constant == SPACE){
 			//printf("I have an space \n");
 		}  else if(constant == CLOSE_PAREN){
 			//printf("I have an ) \n");
+			cmd->type = END_SUBSHELL_COMMAND;
+			command_t * k = &cmd;
+			push(k,0);
 		}  else if(constant == OPEN_PAREN){
 			//printf("I have an ( \n");
 			cmd->type = START_SUBSHELL_COMMAND;
@@ -374,10 +378,19 @@ void add_to_stack(int constant, char ** word, int length){
 void push(command_t * cmd, int and){
 	printf("%p and type %d \n", *cmd, (*cmd)->type);
 	if(!and){
+		if(place != 0 && (*cmd)->type == SEQUENCE_COMMAND){
+			while(place != 0){
+				createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
+				printf("HIT SEMICOLON, TREE \n");
+			}
+			return;
+		}
 		if(place==0 && oplace==0 && (*cmd)->type == NEWLINE_COMMAND){
 			return;
 		} else 	if(place!=0 && (*cmd)->type == NEWLINE_COMMAND){
-			if((*(operators[place-1])).type == REDIRECT_FROM_COMMAND || (*(operators[place-1])).type == REDIRECT_TO_COMMAND){
+			if((*(operators[place-1])).type == NEWLINE_COMMAND){
+				return;
+			} else if((*(operators[place-1])).type == REDIRECT_FROM_COMMAND || (*(operators[place-1])).type == REDIRECT_TO_COMMAND){
 				printf("ERROR FROM REDIRECT AND NEWLINE \n");
 				return;	
 			}
@@ -387,8 +400,16 @@ void push(command_t * cmd, int and){
 				printf("POPPED BECAUSE OF CLOSE PAREN \n");				
 			} else if(!addedLast && (*cmd)->type ==START_SUBSHELL_COMMAND){
 				pop(0);
-				printf("POPPED BECAUSE OF OPEN PAREN");
+				printf("POPPED BECAUSE OF OPEN PAREN \n");
+			} else if(addedLast && (*cmd)->type ==START_SUBSHELL_COMMAND){
+				pop(0);
+				printf("TREATING NEWLINE AS SEMICOLON \n");
+				while(place != 0){
+					createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
+					printf("HIT SEMICOLON, TREE \n");
+				}
 			}
+
 			
 		} else if (place!=0 && (*(*cmd)).type != START_SUBSHELL_COMMAND && ((*(operators[place-1])).type == REDIRECT_FROM_COMMAND || (*(operators[place-1])).type == REDIRECT_TO_COMMAND)){
 			//printf("SYNTAX BAD. GOTTA DO REDIRECT SHIT");
@@ -407,19 +428,37 @@ void push(command_t * cmd, int and){
 				
 		operators[place] = *cmd;
 		place++;
-		addedLast = 0;
+		if((*cmd)->type != NEWLINE_COMMAND){
+			addedLast = 0;
+		}
+		printf("ADDEDLAST IS: %d \n", addedLast);
 //		printf("bottom of pushed stack: %d \n ",(*(operators[0])).type);
 //		printf("TYPE: %d \n",(*cmd)->type);
 		//printf("%d %d \n", cmd->type, place);
 	} else {
-		if(place!=0 && (*(operators[place-1])).type == NEWLINE_COMMAND){
-			/*if((*(operators[place-1])).type == REDIRECT_FROM_COMMAND || (*(operators[place-1])).type == REDIRECT_TO_COMMAND){
-				printf("ERRRROR \n");
-			}*/
+		if(place!=0 && (*cmd)->type == NEWLINE_COMMAND){
+			if((*(operators[place-1])).type == REDIRECT_FROM_COMMAND || (*(operators[place-1])).type == REDIRECT_TO_COMMAND){
+				printf("ERROR FROM REDIRECT AND NEWLINE \n");
+				return;	
+			}
+		} else if(place!=0 && (*(operators[place-1])).type == NEWLINE_COMMAND){
+			if(!addedLast){
+				pop(0);
+				printf("POPPED BECAUSE OF WORD AND NEWLINE \n");
+			}else if(addedLast){
+				pop(0);
+				printf("TREATING NEWLINE AS SEMICOLON \n");
+				while(place != 0){
+					createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
+					printf("HIT SEMICOLON, TREE \n");
+				}
+			}
+
 		}
 		operands[oplace] = *cmd;
 		oplace++;
-		addedLast = 0;
+		addedLast = 1;
+		printf("ADDEDLAST IS: %d \n", addedLast);
 		if(place!= 0 && ((*(operators[place-1])).type == REDIRECT_FROM_COMMAND || (*(operators[place-1])).type == REDIRECT_TO_COMMAND)){
 			command_t command = malloc(sizeof(command_t));
 			command->type = SIMPLE_COMMAND;
@@ -465,7 +504,7 @@ void pop(int and){
 int compareOperator(int first, int second)
 {
     int result = 0;
-    if(second==PIPE_COMMAND || second==START_SUBSHELL_COMMAND || second == NEWLINE_COMMAND || second==REDIRECT_FROM_COMMAND|| second==REDIRECT_FROM_COMMAND)
+    if(second==PIPE_COMMAND || second==START_SUBSHELL_COMMAND || second == NEWLINE_COMMAND || second==REDIRECT_FROM_COMMAND|| second==REDIRECT_TO_COMMAND)
     {
         result = 1;
     }
