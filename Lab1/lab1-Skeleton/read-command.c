@@ -82,8 +82,10 @@ make_command_stream (int (*get_next_byte) (void *),
             case '<' :
 		if(wordFlag){
 			wordFlag = 0;
-			words[wordcount] = buff;
-			wordcount++;
+			if(buff[0] != '\0'){
+				words[wordcount] = buff;
+				wordcount++;
+			}
 			add_to_stack(-1,words,wordcount);
 			addedLast= 1;
 			buff = malloc(sizeof(char) * size);
@@ -102,9 +104,12 @@ make_command_stream (int (*get_next_byte) (void *),
                 break;
             case '>' :
 		if(wordFlag){
+
 			wordFlag = 0;
-			words[wordcount] = buff;
-			wordcount++;
+			if(buff[0] != '\0'){
+				words[wordcount] = buff;
+				wordcount++;
+			}
 			add_to_stack(-1,words,wordcount);
 			addedLast= 1;
 			buff = malloc(sizeof(char) * size);
@@ -473,6 +478,8 @@ void push(command_t * cmd, int and){
 				command->input=*((*(operands[oplace-1])).u.word);
 				command->output = 0;
 			}
+					
+			
 			command->u.word = (*(operands[oplace-2])).u.word;
 			pop(1);
 			pop(1);
