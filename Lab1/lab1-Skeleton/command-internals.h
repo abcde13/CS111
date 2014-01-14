@@ -11,7 +11,8 @@ enum command_type
     END_SUBSHELL_COMMAND, // ...B)
     SUBSHELL_COMMAND,    // ( A )
     NEWLINE_COMMAND,
-    REDIRECT_COMMAND	
+    REDIRECT_FROM_COMMAND,
+    REDIRECT_TO_COMMAND	
   };
 
 // Data associated with a command.

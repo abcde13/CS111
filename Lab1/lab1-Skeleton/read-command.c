@@ -21,6 +21,7 @@ const int SEMICOLON  = 8;
 const int SPACE = 9;
 int place = 0;
 int oplace = 0;
+int addedLast = 0;
 
 struct command_stream
 {
@@ -34,6 +35,7 @@ void push(command_t* cmd, int and);
 command_t * operators;
 command_t * operands;
 void createTree(command_t * operator, command_t * operandRight, command_t  *operandLeft);
+int isand = 0;
 
 command_stream_t
 make_command_stream (int (*get_next_byte) (void *),
@@ -81,6 +83,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			words[wordcount] = buff;
 			wordcount++;
 			add_to_stack(-1,words,wordcount);
+			addedLast= 1;
 			buff = malloc(sizeof(char) * size);
 			words = malloc(sizeof(char *) * size);
 			wordcount = 0;
@@ -101,6 +104,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			words[wordcount] = buff;
 			wordcount++;
 			add_to_stack(-1,words,wordcount);
+			addedLast= 1;
 			buff = malloc(sizeof(char) * size);
 			words = malloc(sizeof(char *) * size);
 			wordcount = 0;
@@ -122,6 +126,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			words[wordcount] = buff;
 			wordcount++;
 			add_to_stack(-1,words,wordcount);
+			addedLast= 1;
 			buff = malloc(sizeof(char) * size);
 			words = malloc(sizeof(char *) * size);
 			wordcount = 0;
@@ -145,6 +150,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			words[wordcount] = buff;
 			wordcount++;
 			add_to_stack(-1,words,wordcount);
+			addedLast= 1;
 			buff = malloc(sizeof(char) * size);
 			words = malloc(sizeof(char *) * size);
 			wordcount = 0;
@@ -169,6 +175,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			words[wordcount] = buff;
 			wordcount++;
 			add_to_stack(-1,words,wordcount);
+			addedLast= 1;
 			buff = malloc(sizeof(char) * size);
 			words = malloc(sizeof(char *) * size);
 			wordcount = 0;
@@ -189,6 +196,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			words[wordcount] = buff;
 			wordcount++;
 			add_to_stack(-1,words,wordcount);
+			addedLast= 1;
 			buff = malloc(sizeof(char) * size);
 			words = malloc(sizeof(char *) * size);
 			wordcount = 0;
@@ -210,6 +218,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			words[wordcount] = buff;
 			wordcount++;
 			add_to_stack(-1,words,wordcount);
+			addedLast= 1;
 			buff = malloc(sizeof(char) * size);
 			words = malloc(sizeof(char *) * size);
 			wordcount = 0;
@@ -272,14 +281,15 @@ make_command_stream (int (*get_next_byte) (void *),
 		words[wordcount] = buff;
 		wordcount++;
 		add_to_stack(-1,words,wordcount);
+		addedLast= 1;
 		buff = malloc(sizeof(char) * size);
 		words = malloc(sizeof(char *) * size);
 		wordcount = 0;
 		buffcount = 0;
 	}
 
+	pop(0);
 	while(place != 0){
-		printf("CLEARING");
 		createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
 	}
 	
@@ -308,19 +318,7 @@ void add_to_stack(int constant, char ** word, int length){
 		cmd->type = SIMPLE_COMMAND;
 		cmd->u.word = malloc(sizeof(char*)*length);
 		cmd->u.word = word;
-		int i = 0;
-		int j = 0;
-		while(j!= length){
-			i = 0;
-			while((cmd->u.word[j])[i] != '\0'){
-		  		//printf("%c ", (cmd->u.word[j])[i]);
-		  		i++;
-			}
-			j++;
-		}
-		command_t * k = &cmd;
-		push(k,1);
-		//printf("\n");
+		command_t * k = &cmd; push(k,1); //printf("\n");
 	}
 	else {
 		if(constant == AND_OPERATOR){
@@ -341,12 +339,12 @@ void add_to_stack(int constant, char ** word, int length){
 			push(k,0);
 			//printf("I have an PIPE \n");
 		}  else if(constant == REDIRECT_FROM){
-			cmd->type = REDIRECT_COMMAND;
+			cmd->type = REDIRECT_FROM_COMMAND;
 			command_t * k = &cmd;
 			push(k,0);
 			//printf("I have an < \n");
 		}  else if(constant == REDIRECT_TO){
-			cmd->type = REDIRECT_COMMAND;
+			cmd->type = REDIRECT_TO_COMMAND;
 			command_t * k = &cmd;
 			push(k,0);
 			//printf("I have an > \n");
@@ -376,10 +374,23 @@ void add_to_stack(int constant, char ** word, int length){
 void push(command_t * cmd, int and){
 	printf("%p and type %d \n", *cmd, (*cmd)->type);
 	if(!and){
-		if(place!=0 && (*(operators[place-1])).type == NEWLINE_COMMAND){
-//			printf("GOTTA DO NEWLNE SHIT");
-			pop(0);
-		} else if (place!=0 && (*(*cmd)).type != START_SUBSHELL_COMMAND && (*(operators[place-1])).type == REDIRECT_COMMAND){
+		if(place==0 && oplace==0 && (*cmd)->type == NEWLINE_COMMAND){
+			return;
+		} else 	if(place!=0 && (*cmd)->type == NEWLINE_COMMAND){
+			if((*(operators[place-1])).type == REDIRECT_FROM_COMMAND || (*(operators[place-1])).type == REDIRECT_TO_COMMAND){
+				printf("ERROR FROM REDIRECT AND NEWLINE \n");
+				return;	
+			}
+		} else if(place!=0 && (*(operators[place-1])).type == NEWLINE_COMMAND){
+			if((*cmd)->type == END_SUBSHELL_COMMAND){
+				pop(0);
+				printf("POPPED BECAUSE OF CLOSE PAREN \n");				
+			} else if(!addedLast && (*cmd)->type ==START_SUBSHELL_COMMAND){
+				pop(0);
+				printf("POPPED BECAUSE OF OPEN PAREN");
+			}
+			
+		} else if (place!=0 && (*(*cmd)).type != START_SUBSHELL_COMMAND && ((*(operators[place-1])).type == REDIRECT_FROM_COMMAND || (*(operators[place-1])).type == REDIRECT_TO_COMMAND)){
 			//printf("SYNTAX BAD. GOTTA DO REDIRECT SHIT");
 		}
 		while((place!=0 && !compareOperator((*(operators[place-1])).type,(*(*cmd)).type)) 
@@ -396,12 +407,39 @@ void push(command_t * cmd, int and){
 				
 		operators[place] = *cmd;
 		place++;
+		addedLast = 0;
 //		printf("bottom of pushed stack: %d \n ",(*(operators[0])).type);
 //		printf("TYPE: %d \n",(*cmd)->type);
 		//printf("%d %d \n", cmd->type, place);
 	} else {
+		if(place!=0 && (*(operators[place-1])).type == NEWLINE_COMMAND){
+			/*if((*(operators[place-1])).type == REDIRECT_FROM_COMMAND || (*(operators[place-1])).type == REDIRECT_TO_COMMAND){
+				printf("ERRRROR \n");
+			}*/
+		}
 		operands[oplace] = *cmd;
 		oplace++;
+		addedLast = 0;
+		if(place!= 0 && ((*(operators[place-1])).type == REDIRECT_FROM_COMMAND || (*(operators[place-1])).type == REDIRECT_TO_COMMAND)){
+			command_t command = malloc(sizeof(command_t));
+			command->type = SIMPLE_COMMAND;
+			command->input = malloc(sizeof(char*));
+			command->output = malloc(sizeof(char*));
+			if((*(operators[place-1])).type == REDIRECT_TO_COMMAND){
+				command->output=*((*(operands[oplace-1])).u.word);
+				command->input = 0;
+			} else {
+				command->input=*((*(operands[oplace-1])).u.word);
+				command->output = 0;
+			}
+			command->u.word = (*(operands[oplace-2])).u.word;
+			pop(1);
+			pop(1);
+			pop(0);
+			command_t * k = &command;
+			push(k,1);
+			
+		}
 		//printf("OPERAND %d %d \n", cmd->type, oplace);
 	}
 		
@@ -427,7 +465,7 @@ void pop(int and){
 int compareOperator(int first, int second)
 {
     int result = 0;
-    if(second==PIPE_COMMAND || second==START_SUBSHELL_COMMAND || second == NEWLINE_COMMAND || second==REDIRECT_COMMAND)
+    if(second==PIPE_COMMAND || second==START_SUBSHELL_COMMAND || second == NEWLINE_COMMAND || second==REDIRECT_FROM_COMMAND|| second==REDIRECT_FROM_COMMAND)
     {
         result = 1;
     }
@@ -436,8 +474,8 @@ int compareOperator(int first, int second)
 		
 
 void createTree(command_t * operator, command_t * operandRight, command_t*  operandLeft){
-	(*(operator))->u.command[1] = *operandLeft;	
-	(*(operator))->u.command[0] = *operandRight;	
+	(*(operator))->u.command[0] = *operandLeft;	
+	(*(operator))->u.command[1] = *operandRight;	
 	(operands[oplace-2]) = *operator;
 	print_command((operands[oplace-2]));
 	pop(1);
