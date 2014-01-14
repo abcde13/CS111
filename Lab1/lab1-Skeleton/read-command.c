@@ -61,20 +61,22 @@ make_command_stream (int (*get_next_byte) (void *),
 	if(c==EOF){
 		break;
 	}
-	if(c == ' ' && spaceFlag){
-		//printf("Skipping \n"); c = get_next_byte(get_next_byte_argument);
+	
+	if (c == ' ' && wordFlag && !spaceFlag){
+		words[wordcount] = buff;
+		wordcount++;
+		buff = malloc(sizeof(char) * size);
+		buffcount = 0;
+		spaceFlag = 1;
+		c = get_next_byte(get_next_byte_argument);
 		continue;
-	} else if (c == ' ' && wordFlag){
-			words[wordcount] = buff;
-			wordcount++;
-			buff = malloc(sizeof(char) * size);
-			buffcount = 0;
-        		c = get_next_byte(get_next_byte_argument);
-			continue;
-	} else if(c == ' ' && !wordFlag){
+	} else if(c == ' ' && spaceFlag){
         	c = get_next_byte(get_next_byte_argument);
 		continue;
+	} else if( c== ' '){
+		printf("RETARDED \n");
 	}
+		
 	spaceFlag = 0;
         switch (c) {
             case '<' :
@@ -376,7 +378,7 @@ void add_to_stack(int constant, char ** word, int length){
 }
 
 void push(command_t * cmd, int and){
-	printf("%p and type %d \n", *cmd, (*cmd)->type);
+//	printf("%p and type %d \n", *cmd, (*cmd)->type);
 	if(!and){
 		if(place != 0 && (*cmd)->type == SEQUENCE_COMMAND){
 			while(place != 0){
