@@ -61,6 +61,12 @@ make_command_stream (int (*get_next_byte) (void *),
 	if(c==EOF){
 		break;
 	}
+	if(c == '#' && buff[0] == '\0'){
+		while(c!= '\n'){
+			printf("In comment");
+			c = get_next_byte(get_next_byte_argument);
+		}
+	}
 	
 	if (c == ' ' && wordFlag && !spaceFlag){
 		words[wordcount] = buff;
