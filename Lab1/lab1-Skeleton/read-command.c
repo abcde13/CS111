@@ -1,12 +1,10 @@
  // UCLA CS 111 Lab 1 command reading
-
 #include "command.h" 
 #include "command-internals.h"
 #include <stdio.h> 
 #include <error.h>
- #include <ctype.h>
-#include <stdlib.h>
-
+#include <ctype.h> 
+#include <stdlib.h> 
 /* FIXME: You may need to add #include directives, macro definitions,
    static function definitions, etc.  */
 /* FIXME: Define the type 'struct command_stream' here.  This should
@@ -22,11 +20,14 @@ const int SPACE = 9;
 int place = 0;
 int oplace = 0;
 int addedLast = 0;
+int parenFlag = 0;
+int anyflag = 0;
 
 struct command_stream
 {
     command_t *forest_pointer;
-};
+    int size;
+} cs;
 
 void add_to_stack(int constant, char ** word, int length);
 int compareOperator(int first, int second);
@@ -45,13 +46,15 @@ make_command_stream (int (*get_next_byte) (void *),
      add auxiliary functions and otherwise modify the source code.
      You can also use external functions defined in the GNU C Library.  */
   //error (1, 0, "command reading not yet implemented");	 
-    int c = get_next_byte(get_next_byte_argument); int andFlag = 0;
+    int c = get_next_byte(get_next_byte_argument);
+    int andFlag = 0;
     int orFlag = 0;
     int wordFlag = 0;
     int spaceFlag = 0;
     int wordcount = 0;
     int size = 100; 
     int buffcount = 0;
+    cs.forest_pointer = malloc(size);
     char * buff = malloc(sizeof(char) * size);
     char ** words = malloc(sizeof(char *) * size);
     operators =  malloc(sizeof(command_t*) * size);
@@ -61,17 +64,20 @@ make_command_stream (int (*get_next_byte) (void *),
 	if(c==EOF){
 		break;
 	}
-	if(c == '#' && buff[0] == '\0'){
+	if(c == '#' /*&& buff[0] == '\0'*/ && !anyflag){
 		while(c!= '\n'){
 			printf("In comment");
 			c = get_next_byte(get_next_byte_argument);
 		}
+	} else if(c == '#' /*&&  buff[0] == '\0'*/ && anyflag){
+		printf("THERE WAS A # ERROR");
 	}
 	
 	if (c == ' ' && wordFlag && !spaceFlag){
 		words[wordcount] = buff;
 		wordcount++;
 		buff = malloc(sizeof(char) * size);
+		anyflag = 0;
 		buffcount = 0;
 		spaceFlag = 1;
 		c = get_next_byte(get_next_byte_argument);
@@ -80,13 +86,18 @@ make_command_stream (int (*get_next_byte) (void *),
         	c = get_next_byte(get_next_byte_argument);
 		continue;
 	} else if( c== ' '){
+		anyflag = 0;
 		printf("RETARDED \n");
+        	c = get_next_byte(get_next_byte_argument);
+		continue;
 	}
 		
 	spaceFlag = 0;
         switch (c) {
             case '<' :
+		anyflag = 1;
 		if(wordFlag){
+			anyflag = 0;
 			wordFlag = 0;
 			if(buff[0] != '\0'){
 				words[wordcount] = buff;
@@ -100,17 +111,19 @@ make_command_stream (int (*get_next_byte) (void *),
 			buffcount = 0;
 		}
 		if(andFlag){
-			//printf("Error \n");
+			printf("Error 1 \n");
 			andFlag = 0;
 		} else if(orFlag){
 			orFlag = 0;
 			add_to_stack(PIPE_OPERATOR,NULL,-1);
 		}
 		add_to_stack(REDIRECT_FROM,NULL,-1);
+			
                 break;
             case '>' :
+		anyflag = 1;
 		if(wordFlag){
-
+			anyflag = 0;
 			wordFlag = 0;
 			if(buff[0] != '\0'){
 				words[wordcount] = buff;
@@ -124,7 +137,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			buffcount = 0;
 		}
                 if(andFlag){
-			//printf("Error \n");
+			printf("Error 2 \n");
 			andFlag = 0;
 		} else if(orFlag){
 			add_to_stack(PIPE_OPERATOR,NULL,-1);
@@ -133,12 +146,14 @@ make_command_stream (int (*get_next_byte) (void *),
 		add_to_stack(REDIRECT_TO,NULL,-1);
                 break;
             case '&' :
+		anyflag = 1;
 		//printf("%c \n", c);
 		if(wordFlag){
 			wordFlag = 0;
 			words[wordcount] = buff;
 			wordcount++;
 			add_to_stack(-1,words,wordcount);
+			anyflag = 0;
 			addedLast= 1;
 			buff = malloc(sizeof(char) * size);
 			words = malloc(sizeof(char *) * size);
@@ -157,6 +172,7 @@ make_command_stream (int (*get_next_byte) (void *),
 		}
 		break;
             case '|' :
+		anyflag = 1;
                 //printf("%c \n", c);
 		if(wordFlag){
 			wordFlag = 0;
@@ -164,13 +180,14 @@ make_command_stream (int (*get_next_byte) (void *),
 			wordcount++;
 			add_to_stack(-1,words,wordcount);
 			addedLast= 1;
+			anyflag = 0;
 			buff = malloc(sizeof(char) * size);
 			words = malloc(sizeof(char *) * size);
 			wordcount = 0;
 			buffcount = 0;
 		}
                 if(andFlag){
-			//printf("Error \n");
+			printf("Error 3 \n");
 			andFlag = 0;
 			orFlag=1;
 		} else {
@@ -183,10 +200,12 @@ make_command_stream (int (*get_next_byte) (void *),
 		}
                 break;
             case '(' :
+		anyflag = 1;
 		if(wordFlag){
 			wordFlag = 0;
 			words[wordcount] = buff;
 			wordcount++;
+			anyflag = 0;
 			add_to_stack(-1,words,wordcount);
 			addedLast= 1;
 			buff = malloc(sizeof(char) * size);
@@ -195,7 +214,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			buffcount = 0;
 		}
                 if(andFlag){
-			//printf("Error \n");
+			printf("Error 4 \n");
 			andFlag = 0;
 		} else if(orFlag){
 			add_to_stack(PIPE_OPERATOR,NULL,-1);
@@ -204,9 +223,11 @@ make_command_stream (int (*get_next_byte) (void *),
 		add_to_stack(OPEN_PAREN,NULL,-1);
                 break;
             case ')' :
+		anyflag = 1;
 		if(wordFlag){
 			wordFlag = 0;
 			words[wordcount] = buff;
+			anyflag = 0;
 			wordcount++;
 			add_to_stack(-1,words,wordcount);
 			addedLast= 1;
@@ -216,7 +237,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			buffcount = 0;
 		}
                 if(andFlag){
-			//printf("Error \n");
+			printf("Error 5 \n");
 			andFlag = 0;
 		} else if(orFlag) {
 			add_to_stack(PIPE_OPERATOR,NULL,-1);
@@ -226,9 +247,11 @@ make_command_stream (int (*get_next_byte) (void *),
                 break;
 	    case '\n' : 
 	    case ';':
+		anyflag = 1;
 		if(wordFlag){
 			wordFlag = 0;
 			words[wordcount] = buff;
+			anyflag = 0;
 			wordcount++;
 			add_to_stack(-1,words,wordcount);
 			addedLast= 1;
@@ -241,7 +264,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			add_to_stack(PIPE_OPERATOR,NULL,-1);	
 			orFlag = 0;
 		} else if (andFlag){
-			//printf("Error");
+			printf("Error 6 \n");
 			andFlag = 0;
 		}  
 		if(c == ';'){
@@ -252,10 +275,10 @@ make_command_stream (int (*get_next_byte) (void *),
 		break;
             default :
 		if(!isalnum(c) && c!='!'&& c!='%' && c!='+'&& c!=',' && c!='-' && c!='.' &&  c!='/'&&  c!=':'&& c!='@'&& c!='^'&& c!='_'){
-			//printf("Error \n");
+			printf("Error 7 \n");
 		}else{
 			if(andFlag){
-				//printf("Error \n");
+				printf("Error 8 \n");
 				andFlag =0;
 			} else if(orFlag){
 				add_to_stack(PIPE_OPERATOR,NULL,-1);
@@ -288,7 +311,7 @@ make_command_stream (int (*get_next_byte) (void *),
 	if(orFlag){
 		add_to_stack(PIPE_OPERATOR,NULL,-1);	
 	} else if (andFlag){
-		//printf("Error");
+		printf("Error 9");
 	} else if (wordFlag){
 		wordFlag = 0;
 		words[wordcount] = buff;
@@ -301,12 +324,34 @@ make_command_stream (int (*get_next_byte) (void *),
 		buffcount = 0;
 	}
 
-	pop(0);
+	printf("NEARING THE END \n");
+	if(place!=0){
+		pop(0);
+	}
 	while(place != 0){
-		createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
+		if(oplace > 1){
+			printf("AT END \n");
+			printf("%d \n",(operators[place-1])->type);
+			printf("%d \n",(operands[oplace-1])->type);
+			printf("%d \n",(operands[oplace-2])->type);
+			createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
+		} else {
+			printf("Not enough operands 1\n");
+			printf("%d \n",place);
+			place--;
+		}
+	}
+	if(oplace==1){
+		cs.forest_pointer[cs.size] = operands[oplace-1];
+		cs.size++;
+		pop(1);
 	}
 	
-	print_command((operands[oplace-1]));
+	int i = 0;
+	while(i < cs.size){
+		print_command(cs.forest_pointer[i]);
+		i++;
+	}
 	//print_command(oper
   return 0;
 }
@@ -389,13 +434,59 @@ void add_to_stack(int constant, char ** word, int length){
 }
 
 void push(command_t * cmd, int and){
-//	printf("%p and type %d \n", *cmd, (*cmd)->type);
+	printf("%p and type %d \n", *cmd, (*cmd)->type);
 	if(!and){
+		if((*cmd)->type == START_SUBSHELL_COMMAND){
+			parenFlag++;
+		}
+		if(place != 0 && (*cmd)->type == END_SUBSHELL_COMMAND){
+			if(!addedLast){
+				printf("OPERATOR PRECEDES )");
+				return;
+			}
+			while((*(operators[place-1])).type != START_SUBSHELL_COMMAND){
+				if(oplace > 1){
+					printf("DOING PAREN, TREE \n");
+					createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
+				} else {
+					printf("Not enough operands for parentheses\n");
+					place--;
+				}
+				if(place == 0){
+					printf("NEVER FOUND (");
+					return;
+				}
+			}
+			pop(0);
+			parenFlag--;
+			command_t cmd = malloc(sizeof(100));
+			cmd->output = malloc(sizeof(char*));
+			cmd->input = malloc(sizeof(char*));
+			cmd->output = 0;
+			cmd->input = 0;
+			cmd->type = SUBSHELL_COMMAND;
+			cmd->u.subshell_command = (operands[oplace-1]);
+			(operands[oplace-1]) = cmd;
+			print_command((operands[oplace-1]));
+			return;
+		} else if(place == 0 && (*cmd)->type == END_SUBSHELL_COMMAND){
+			printf("ERRoR, can't have ) first");
+			return;
+		}
+			
 		if(place != 0 && (*cmd)->type == SEQUENCE_COMMAND){
 			while(place != 0){
-				createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
-				printf("HIT SEMICOLON, TREE \n");
+				if(oplace > 1){
+					printf("HIT SEMICOLON, TREE \n");
+					createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
+				} else {
+					printf("Not enough operands 2\n");
+					place--;
+				}
 			}
+			cs.forest_pointer[cs.size] = operands[oplace-1];
+			cs.size++;
+			pop(1);
 			return;
 		}
 		if(place==0 && oplace==0 && (*cmd)->type == NEWLINE_COMMAND){
@@ -418,21 +509,38 @@ void push(command_t * cmd, int and){
 				pop(0);
 				printf("TREATING NEWLINE AS SEMICOLON \n");
 				while(place != 0){
-					createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
-					printf("HIT SEMICOLON, TREE \n");
+					if(oplace > 1){
+						printf("HIT SEMICOLON, TREE \n");
+						createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
+					}else {
+						printf("Not enough operands 3\n");
+						place--;
+					}
+
 				}
+				cs.forest_pointer[cs.size] = operands[oplace-1];
+				cs.size++;
+				pop(1);
 			}
 
 			
 		} else if (place!=0 && (*(*cmd)).type != START_SUBSHELL_COMMAND && ((*(operators[place-1])).type == REDIRECT_FROM_COMMAND || (*(operators[place-1])).type == REDIRECT_TO_COMMAND)){
 			//printf("SYNTAX BAD. GOTTA DO REDIRECT SHIT");
 		}
-		while((place!=0 && !compareOperator((*(operators[place-1])).type,(*(*cmd)).type)) 
+		while((place!=0 && !parenFlag && !compareOperator((*(operators[place-1])).type,(*(*cmd)).type)) 
 			|| ((*(*cmd)).type == END_SUBSHELL_COMMAND &&  (*(operators[place-1])).type!=START_SUBSHELL_COMMAND)){
 			//printf("HI \n");
 			//printf("oplace: %d place %d \n", oplace, place);
 //			printf("bottom of stack: %d \n ",(*(operators[0])).type);
-			createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
+			if(oplace > 1){
+				printf("HIT SEMICOLON, TREE \n");
+				createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
+			} else {
+				printf("%d %d parenFlag \n", parenFlag, place);
+				printf("Not enough operands 4\n");
+				place--;
+			}
+
 		}
 		if((*(*cmd)).type == END_SUBSHELL_COMMAND){
 			pop(0);
@@ -462,9 +570,17 @@ void push(command_t * cmd, int and){
 				pop(0);
 				printf("TREATING NEWLINE AS SEMICOLON \n");
 				while(place != 0){
-					createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
-					printf("HIT SEMICOLON, TREE \n");
+					if(oplace > 1){
+						printf("HIT SEMICOLON, TREE \n");
+						createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
+					} else {
+						printf("Not enough operands 5\n");
+						place--;
+					}
 				}
+				cs.forest_pointer[cs.size] = operands[oplace-1];
+				cs.size++;
+				pop(1);
 			}
 
 		}
@@ -508,9 +624,8 @@ void pop(int and){
 		//printf("%d Popped operator \n", place);
 	} else {
 //		free(operands[oplace]);	
-		operands[oplace] = 0;
+		operands[oplace-1] = 0;
 		oplace--;
-		//printf("%d Popped operand \n", oplace);
 	}
 
 	
