@@ -449,8 +449,8 @@ void push(command_t * cmd, int and){
 		}
 		if(place != 0 && (*cmd)->type == END_SUBSHELL_COMMAND){
 			if(!addedLast){
-				syntaxError(1);
 				printf("OPERATOR PRECEDES )");
+				syntaxError(1);
 				return;
 			}
 			while((*(operators[place-1])).type != START_SUBSHELL_COMMAND){
@@ -482,6 +482,7 @@ void push(command_t * cmd, int and){
 			return;
 		} else if(place == 0 && (*cmd)->type == END_SUBSHELL_COMMAND){
 			printf("ERRoR, can't have ) first");
+			syntaxError(1);
 			return;
 		}
 			
@@ -492,6 +493,7 @@ void push(command_t * cmd, int and){
 					createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
 				} else {
 					printf("Not enough operands 2\n");
+					syntaxError(1);
 					place--;
 				}
 			}
@@ -507,6 +509,7 @@ void push(command_t * cmd, int and){
 				return;
 			} else if((*(operators[place-1])).type == REDIRECT_FROM_COMMAND || (*(operators[place-1])).type == REDIRECT_TO_COMMAND){
 				printf("ERROR FROM REDIRECT AND NEWLINE \n");
+				syntaxError(1);
 				return;	
 			}
 		} else if(place!=0 && (*(operators[place-1])).type == NEWLINE_COMMAND){
@@ -525,6 +528,7 @@ void push(command_t * cmd, int and){
 						createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
 					}else {
 						printf("Not enough operands 3\n");
+						syntaxError(1);
 						place--;
 					}
 
@@ -536,6 +540,7 @@ void push(command_t * cmd, int and){
 
 			
 		} else if (place!=0 && (*(*cmd)).type != START_SUBSHELL_COMMAND && ((*(operators[place-1])).type == REDIRECT_FROM_COMMAND || (*(operators[place-1])).type == REDIRECT_TO_COMMAND)){
+			syntaxError(1);
 			//printf("SYNTAX BAD. GOTTA DO REDIRECT SHIT");
 		}
 		while((place!=0 && !parenFlag && !compareOperator((*(operators[place-1])).type,(*(*cmd)).type)) 
@@ -549,6 +554,7 @@ void push(command_t * cmd, int and){
 			} else {
 				printf("%d %d parenFlag \n", parenFlag, place);
 				printf("Not enough operands 4\n");
+				syntaxError(1);
 				place--;
 			}
 
@@ -570,6 +576,7 @@ void push(command_t * cmd, int and){
 	} else {
 		if(place!=0 && (*cmd)->type == NEWLINE_COMMAND){
 			if((*(operators[place-1])).type == REDIRECT_FROM_COMMAND || (*(operators[place-1])).type == REDIRECT_TO_COMMAND){
+				syntaxError(1);
 				printf("ERROR FROM REDIRECT AND NEWLINE \n");
 				return;	
 			}
@@ -586,6 +593,7 @@ void push(command_t * cmd, int and){
 						createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
 					} else {
 						printf("Not enough operands 5\n");
+						syntaxError(1);
 						place--;
 					}
 				}

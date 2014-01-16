@@ -1,0 +1,195 @@
+0x8c6b8a0 and type 4 
+ADDEDLAST IS: 1 
+0x8c6bae0 and type 8 
+ADDEDLAST IS: 1 
+0x8c6bb10 and type 8 
+0x8c6bc10 and type 4 
+TREATING NEWLINE AS SEMICOLON 
+ADDEDLAST IS: 1 
+0x8c6be50 and type 8 
+ADDEDLAST IS: 1 
+0x8c6be80 and type 8 
+0x8c6bf80 and type 4 
+TREATING NEWLINE AS SEMICOLON 
+ADDEDLAST IS: 1 
+0x8c6c1c0 and type 8 
+ADDEDLAST IS: 1 
+0x8c6c1f0 and type 8 
+0x8c6c288 and type 4 
+TREATING NEWLINE AS SEMICOLON 
+ADDEDLAST IS: 1 
+0x8c6c4c8 and type 9 
+ADDEDLAST IS: 0 
+0x8c6c560 and type 4 
+ADDEDLAST IS: 1 
+0x8c6c5a0 and type 4 
+ADDEDLAST IS: 1 
+0x8c6c7d0 and type 3 
+ADDEDLAST IS: 0 
+0x8c6c938 and type 4 
+ADDEDLAST IS: 1 
+0x8c6cb80 and type 3 
+ADDEDLAST IS: 0 
+0x8c6cc80 and type 4 
+ADDEDLAST IS: 1 
+0x8c6cec0 and type 2 
+HIT SEMICOLON, TREE 
+    tr a-z A-Z  \
+  |
+    sort -u 
+HIT SEMICOLON, TREE 
+    cat</etc/passwd \
+  |
+    tr a-z A-Z  \
+  |
+    sort -u 
+ADDEDLAST IS: 0 
+0x8c6cfc0 and type 4 
+ADDEDLAST IS: 1 
+0x8c6d200 and type 8 
+ADDEDLAST IS: 1 
+0x8c6d230 and type 8 
+0x8c6d2c8 and type 4 
+TREATING NEWLINE AS SEMICOLON 
+HIT SEMICOLON, TREE 
+      cat</etc/passwd \
+    |
+      tr a-z A-Z  \
+    |
+      sort -u  \
+  ||
+    echo sort failed!
+ADDEDLAST IS: 1 
+0x8c6d508 and type 9 
+ADDEDLAST IS: 0 
+0x8c6d5a0 and type 4 
+ADDEDLAST IS: 1 
+0x8c6d5e0 and type 4 
+ADDEDLAST IS: 1 
+0x8c6d810 and type 10 
+ADDEDLAST IS: 0 
+0x8c6d840 and type 4 
+ADDEDLAST IS: 1 
+0x8c6d880 and type 4 
+ADDEDLAST IS: 1 
+0x8c6dab0 and type 8 
+ADDEDLAST IS: 1 
+0x8c6dae0 and type 8 
+0x8c6db78 and type 4 
+TREATING NEWLINE AS SEMICOLON 
+ADDEDLAST IS: 1 
+0x8c6ddb8 and type 9 
+ADDEDLAST IS: 0 
+0x8c6de50 and type 4 
+ADDEDLAST IS: 1 
+0x8c6de90 and type 4 
+ADDEDLAST IS: 1 
+0x8c6e0c0 and type 3 
+ADDEDLAST IS: 0 
+0x8c6e228 and type 4 
+ADDEDLAST IS: 1 
+0x8c6e470 and type 3 
+ADDEDLAST IS: 0 
+0x8c6e570 and type 4 
+ADDEDLAST IS: 1 
+0x8c6e7b0 and type 10 
+ADDEDLAST IS: 0 
+0x8c6e848 and type 4 
+ADDEDLAST IS: 1 
+0x8c6e888 and type 4 
+ADDEDLAST IS: 1 
+0x8c6eab8 and type 2 
+HIT SEMICOLON, TREE 
+    tr a-z A-Z  \
+  |
+    sort -u>out
+HIT SEMICOLON, TREE 
+    cat</etc/passwd \
+  |
+    tr a-z A-Z  \
+  |
+    sort -u>out
+ADDEDLAST IS: 0 
+0x8c6ebb8 and type 4 
+ADDEDLAST IS: 1 
+0x8c6edf8 and type 8 
+ADDEDLAST IS: 1 
+0x8c6ee28 and type 8 
+0x8c6ee58 and type 4 
+TREATING NEWLINE AS SEMICOLON 
+HIT SEMICOLON, TREE 
+      cat</etc/passwd \
+    |
+      tr a-z A-Z  \
+    |
+      sort -u>out \
+  ||
+    echo sort failed!
+ADDEDLAST IS: 1 
+0x8c6f098 and type 0 
+ADDEDLAST IS: 0 
+0x8c6f0c8 and type 4 
+ADDEDLAST IS: 1 
+0x8c6f308 and type 2 
+HIT SEMICOLON, TREE 
+    a \
+  &&
+    b
+ADDEDLAST IS: 0 
+0x8c6f338 and type 8 
+ADDEDLAST IS: 0 
+0x8c6f3d0 and type 4 
+POPPED BECAUSE OF WORD AND NEWLINE 
+ADDEDLAST IS: 1 
+0x8c6f610 and type 0 
+HIT SEMICOLON, TREE 
+      a \
+    &&
+      b \
+  ||
+    c 
+ADDEDLAST IS: 0 
+0x8c6f640 and type 8 
+ADDEDLAST IS: 0 
+0x8c6f6d8 and type 4 
+POPPED BECAUSE OF WORD AND NEWLINE 
+ADDEDLAST IS: 1 
+0x8c6f918 and type 3 
+ADDEDLAST IS: 0 
+0x8c6f9b0 and type 4 
+ADDEDLAST IS: 1 
+0x8c6fbf0 and type 0 
+HIT SEMICOLON, TREE 
+    d  \
+  |
+    e 
+HIT SEMICOLON, TREE 
+        a \
+      &&
+        b \
+    ||
+      c  \
+  &&
+      d  \
+    |
+      e 
+ADDEDLAST IS: 0 
+0x8c6fc20 and type 4 
+ADDEDLAST IS: 1 
+0x8c6fe60 and type 3 
+ADDEDLAST IS: 0 
+0x8c6fe90 and type 8 
+ADDEDLAST IS: 0 
+0x8c6fec0 and type 8 
+0x8c6fef0 and type 4 
+POPPED BECAUSE OF WORD AND NEWLINE 
+ADDEDLAST IS: 1 
+0x8c70130 and type 9 
+ADDEDLAST IS: 0 
+0x8c70160 and type 4 
+ADDEDLAST IS: 1 
+0x8c701a0 and type 4 
+ADDEDLAST IS: 1 
+0x8c703d0 and type 8 
+ADDEDLAST IS: 1 
+0x8c70400 and type 8 
