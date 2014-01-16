@@ -345,6 +345,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
 		} else {
 			printf("Not enough operands 1\n");
+			syntaxError(1);
 			printf("%d \n",place);
 			place--;
 		}
@@ -385,8 +386,7 @@ void add_to_stack(int constant, char ** word, int length){
 		cmd->u.word = malloc(sizeof(char*)*length);
 		cmd->u.word = word;
 		command_t * k = &cmd; push(k,1); //printf("\n");
-	}
-	else {
+	} else {
 		if(constant == AND_OPERATOR){
 			cmd->type = AND_COMMAND;
 			command_t * k = &cmd;
@@ -449,6 +449,7 @@ void push(command_t * cmd, int and){
 		}
 		if(place != 0 && (*cmd)->type == END_SUBSHELL_COMMAND){
 			if(!addedLast){
+				syntaxError(1);
 				printf("OPERATOR PRECEDES )");
 				return;
 			}
@@ -457,10 +458,12 @@ void push(command_t * cmd, int and){
 					printf("DOING PAREN, TREE \n");
 					createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
 				} else {
+					syntaxError(1);
 					printf("Not enough operands for parentheses\n");
 					place--;
 				}
 				if(place == 0){
+					syntaxError(1);
 					printf("NEVER FOUND (");
 					return;
 				}
