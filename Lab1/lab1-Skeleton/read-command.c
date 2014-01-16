@@ -27,7 +27,8 @@ struct command_stream
 {
     command_t *forest_pointer;
     int size;
-} cs;
+    int index;
+};
 
 void add_to_stack(int constant, char ** word, int length);
 int compareOperator(int first, int second);
@@ -35,6 +36,13 @@ void pop(int and);
 void push(command_t* cmd, int and);
 command_t * operators;
 command_t * operands;
+command_stream_t cs;
+
+void syntaxError(int line) 
+{
+    fprintf(stderr, "%i: syntax error in input file \n", line);
+    exit(1);
+}
 void createTree(command_t * operator, command_t * operandRight, command_t  *operandLeft);
 int isand = 0;
 
@@ -54,7 +62,8 @@ make_command_stream (int (*get_next_byte) (void *),
     int wordcount = 0;
     int size = 100; 
     int buffcount = 0;
-    cs.forest_pointer = malloc(size);
+    cs = malloc(sizeof(command_stream_t*) * size);
+    cs->forest_pointer = malloc(size);
     char * buff = malloc(sizeof(char) * size);
     char ** words = malloc(sizeof(char *) * size);
     operators =  malloc(sizeof(command_t*) * size);
@@ -70,7 +79,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			c = get_next_byte(get_next_byte_argument);
 		}
 	} else if(c == '#' /*&&  buff[0] == '\0'*/ && anyflag){
-		printf("THERE WAS A # ERROR");
+		syntaxError(1);
 	}
 	
 	if (c == ' ' && wordFlag && !spaceFlag){
@@ -87,7 +96,6 @@ make_command_stream (int (*get_next_byte) (void *),
 		continue;
 	} else if( c== ' '){
 		anyflag = 0;
-		printf("RETARDED \n");
         	c = get_next_byte(get_next_byte_argument);
 		continue;
 	}
@@ -111,7 +119,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			buffcount = 0;
 		}
 		if(andFlag){
-			printf("Error 1 \n");
+			syntaxError(1);
 			andFlag = 0;
 		} else if(orFlag){
 			orFlag = 0;
@@ -137,7 +145,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			buffcount = 0;
 		}
                 if(andFlag){
-			printf("Error 2 \n");
+			syntaxError(1);
 			andFlag = 0;
 		} else if(orFlag){
 			add_to_stack(PIPE_OPERATOR,NULL,-1);
@@ -187,7 +195,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			buffcount = 0;
 		}
                 if(andFlag){
-			printf("Error 3 \n");
+			syntaxError(1);
 			andFlag = 0;
 			orFlag=1;
 		} else {
@@ -214,7 +222,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			buffcount = 0;
 		}
                 if(andFlag){
-			printf("Error 4 \n");
+			syntaxError(1);
 			andFlag = 0;
 		} else if(orFlag){
 			add_to_stack(PIPE_OPERATOR,NULL,-1);
@@ -237,7 +245,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			buffcount = 0;
 		}
                 if(andFlag){
-			printf("Error 5 \n");
+			syntaxError(1);
 			andFlag = 0;
 		} else if(orFlag) {
 			add_to_stack(PIPE_OPERATOR,NULL,-1);
@@ -264,7 +272,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			add_to_stack(PIPE_OPERATOR,NULL,-1);	
 			orFlag = 0;
 		} else if (andFlag){
-			printf("Error 6 \n");
+			syntaxError(1);
 			andFlag = 0;
 		}  
 		if(c == ';'){
@@ -275,10 +283,10 @@ make_command_stream (int (*get_next_byte) (void *),
 		break;
             default :
 		if(!isalnum(c) && c!='!'&& c!='%' && c!='+'&& c!=',' && c!='-' && c!='.' &&  c!='/'&&  c!=':'&& c!='@'&& c!='^'&& c!='_'){
-			printf("Error 7 \n");
+			syntaxError(1);
 		}else{
 			if(andFlag){
-				printf("Error 8 \n");
+				syntaxError(1);
 				andFlag =0;
 			} else if(orFlag){
 				add_to_stack(PIPE_OPERATOR,NULL,-1);
@@ -311,7 +319,7 @@ make_command_stream (int (*get_next_byte) (void *),
 	if(orFlag){
 		add_to_stack(PIPE_OPERATOR,NULL,-1);	
 	} else if (andFlag){
-		printf("Error 9");
+		syntaxError(1);
 	} else if (wordFlag){
 		wordFlag = 0;
 		words[wordcount] = buff;
@@ -342,26 +350,26 @@ make_command_stream (int (*get_next_byte) (void *),
 		}
 	}
 	if(oplace==1){
-		cs.forest_pointer[cs.size] = operands[oplace-1];
-		cs.size++;
+		cs->forest_pointer[cs->size] = operands[oplace-1];
+		cs->size++;
 		pop(1);
 	}
 	
 	int i = 0;
-	while(i < cs.size){
-		print_command(cs.forest_pointer[i]);
+	while(i < cs->size){
+		print_command(cs->forest_pointer[i]);
 		i++;
 	}
 	//print_command(oper
-  return 0;
+  return cs;
 }
 
 command_t
 read_command_stream (command_stream_t s)
 {
-  /* FIXME: Replace this with your implementation too.  */
-  error (1, 0, "command reading not yet implemented");
-  return 0;
+  command_t b = s->forest_pointer[s->index];
+  s->index++;
+  return b;
 }
 
 
@@ -484,8 +492,8 @@ void push(command_t * cmd, int and){
 					place--;
 				}
 			}
-			cs.forest_pointer[cs.size] = operands[oplace-1];
-			cs.size++;
+			cs->forest_pointer[cs->size] = operands[oplace-1];
+			cs->size++;
 			pop(1);
 			return;
 		}
@@ -518,8 +526,8 @@ void push(command_t * cmd, int and){
 					}
 
 				}
-				cs.forest_pointer[cs.size] = operands[oplace-1];
-				cs.size++;
+				cs->forest_pointer[cs->size] = operands[oplace-1];
+				cs->size++;
 				pop(1);
 			}
 
@@ -578,8 +586,8 @@ void push(command_t * cmd, int and){
 						place--;
 					}
 				}
-				cs.forest_pointer[cs.size] = operands[oplace-1];
-				cs.size++;
+				cs->forest_pointer[cs->size] = operands[oplace-1];
+				cs->size++;
 				pop(1);
 			}
 

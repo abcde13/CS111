@@ -1,0 +1,21 @@
+0x86d48a0 and type 4 
+ADDEDLAST IS: 1 
+0x86d4ae0 and type 1 
+ADDEDLAST IS: 0 
+0x86d4b10 and type 4 
+ADDEDLAST IS: 1 
+0x86d4d50 and type 6 
+DOING PAREN, TREE 
+    a \
+  ;
+    b
+NEVER FOUND (0x86d4d80 and type 8 
+ADDEDLAST IS: 1 
+NEARING THE END 
+    a \
+  ;
+    b
+# 1
+    a \
+  ;
+    b
