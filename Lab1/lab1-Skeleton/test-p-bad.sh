@@ -8,7 +8,6 @@ mkdir "$tmp" || exit
 cd "$tmp" || exit
 status=
 
-: << 'a'
 # Sanity check, to make sure it works with at least one good example.
 echo x >test0.sh || exit
 ../timetrash -p test0.sh >test0.out 2>test0.err || exit
@@ -19,8 +18,6 @@ test ! -s test0.err || {
   cat test0.err
   exit 1
 }
-
-a
 
 n=1
 for bad in \
