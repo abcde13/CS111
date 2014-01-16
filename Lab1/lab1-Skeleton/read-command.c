@@ -611,14 +611,12 @@ void push(command_t * cmd, int and){
 		if(place!= 0 && ((*(operators[place-1])).type == REDIRECT_FROM_COMMAND || (*(operators[place-1])).type == REDIRECT_TO_COMMAND)){
 			command_t command = malloc(sizeof(command_t));
 			command->type = SIMPLE_COMMAND;
-			command->input = malloc(sizeof(char*));
-			command->output = malloc(sizeof(char*));
 			if((*(operators[place-1])).type == REDIRECT_TO_COMMAND){
+				command->output = malloc(sizeof(char*));
 				command->output=*((*(operands[oplace-1])).u.word);
-				command->input = 0;
 			} else {
+				command->input = malloc(sizeof(char*));
 				command->input=*((*(operands[oplace-1])).u.word);
-				command->output = 0;
 			}
 					
 			
