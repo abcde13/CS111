@@ -1,6 +1,6 @@
  // UCLA CS 111 Lab 1 command reading
-#include "command.h" 
-#include "command-internals.h"
+#include "command.h"
+ #include "command-internals.h"
 #include <stdio.h> 
 #include <error.h>
 #include <ctype.h> 
@@ -364,6 +364,7 @@ make_command_stream (int (*get_next_byte) (void *),
 	}*/
 	//print_command(oper
   return cs;
+ // return 0;
 }
 
 command_t
@@ -612,20 +613,39 @@ void push(command_t * cmd, int and){
 			command_t command = malloc(sizeof(command_t));
 			command->type = SIMPLE_COMMAND;
 			if((*(operators[place-1])).type == REDIRECT_TO_COMMAND){
+//				printf("DOING TO \n");
 				command->output = malloc(sizeof(char*));
 				command->output=*((*(operands[oplace-1])).u.word);
+//				printf("%c \n ", *(command->output));
+				if(((*(operands[oplace-2])).input)==NULL){
+//					printf("IS NULL \n");
+					command->input=0;
+				}else{
+					command->input = &(*(operands[oplace-2])->input);
+					//printf("input %c \n",*(operands[oplace-2])->input);
+				}
 			} else {
+//				printf("DOING FROM \n");
 				command->input = malloc(sizeof(char*));
 				command->input=*((*(operands[oplace-1])).u.word);
+//				printf("%c \n ", *(command->input));
+				if(((*(operands[oplace-2])).output)==NULL){
+//					printf("IS NULL \n");
+					command->output=0;
+				}else{
+					command->output = &(*(operands[oplace-2])->output);
+					//printf("input %c \n",*(operands[oplace-2])->input);
+				}
 			}
-					
-			
 			command->u.word = (*(operands[oplace-2])).u.word;
 			pop(1);
 			pop(1);
 			pop(0);
 			command_t * k = &command;
+			//printf("input %d \n",*(command->input));
+			//printf("output %d \n",*(command->output));
 			push(k,1);
+			//print_command((operands[oplace-1]));
 			
 		}
 		//printf("OPERAND %d %d \n", cmd->type, oplace);
