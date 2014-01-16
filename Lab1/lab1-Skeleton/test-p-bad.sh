@@ -19,6 +19,7 @@ test ! -s test0.err || {
   exit 1
 }
 
+
 n=1
 for bad in \
   '`' \

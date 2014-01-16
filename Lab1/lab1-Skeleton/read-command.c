@@ -75,7 +75,7 @@ make_command_stream (int (*get_next_byte) (void *),
 	}
 	if(c == '#' /*&& buff[0] == '\0'*/ && !anyflag){
 		while(c!= '\n'){
-			printf("In comment");
+			//printf("In comment");
 			c = get_next_byte(get_next_byte_argument);
 		}
 	} else if(c == '#' /*&&  buff[0] == '\0'*/ && anyflag){
@@ -119,7 +119,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			buffcount = 0;
 		}
 		if(andFlag){
-			syntaxError(1);
+			syntaxError(2);
 			andFlag = 0;
 		} else if(orFlag){
 			orFlag = 0;
@@ -145,7 +145,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			buffcount = 0;
 		}
                 if(andFlag){
-			syntaxError(1);
+			syntaxError(3);
 			andFlag = 0;
 		} else if(orFlag){
 			add_to_stack(PIPE_OPERATOR,NULL,-1);
@@ -195,7 +195,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			buffcount = 0;
 		}
                 if(andFlag){
-			syntaxError(1);
+			syntaxError(4);
 			andFlag = 0;
 			orFlag=1;
 		} else {
@@ -222,7 +222,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			buffcount = 0;
 		}
                 if(andFlag){
-			syntaxError(1);
+			syntaxError(5);
 			andFlag = 0;
 		} else if(orFlag){
 			add_to_stack(PIPE_OPERATOR,NULL,-1);
@@ -245,7 +245,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			buffcount = 0;
 		}
                 if(andFlag){
-			syntaxError(1);
+			syntaxError(6);
 			andFlag = 0;
 		} else if(orFlag) {
 			add_to_stack(PIPE_OPERATOR,NULL,-1);
@@ -272,21 +272,22 @@ make_command_stream (int (*get_next_byte) (void *),
 			add_to_stack(PIPE_OPERATOR,NULL,-1);	
 			orFlag = 0;
 		} else if (andFlag){
-			syntaxError(1);
+			syntaxError(7);
 			andFlag = 0;
 		}  
 		if(c == ';'){
 			add_to_stack(SEMICOLON,NULL,-1);
 		} else {
+			anyflag = 0;
 			add_to_stack(NEWLINE,NULL,-1);
 		}
 		break;
             default :
 		if(!isalnum(c) && c!='!'&& c!='%' && c!='+'&& c!=',' && c!='-' && c!='.' &&  c!='/'&&  c!=':'&& c!='@'&& c!='^'&& c!='_'){
-			syntaxError(1);
+			syntaxError(8);
 		}else{
 			if(andFlag){
-				syntaxError(1);
+				syntaxError(9);
 				andFlag =0;
 			} else if(orFlag){
 				add_to_stack(PIPE_OPERATOR,NULL,-1);
@@ -319,7 +320,7 @@ make_command_stream (int (*get_next_byte) (void *),
 	if(orFlag){
 		add_to_stack(PIPE_OPERATOR,NULL,-1);	
 	} else if (andFlag){
-		syntaxError(1);
+		syntaxError(10);
 	} else if (wordFlag){
 		wordFlag = 0;
 		words[wordcount] = buff;
@@ -338,15 +339,15 @@ make_command_stream (int (*get_next_byte) (void *),
 	}
 	while(place != 0){
 		if(oplace > 1){
-			printf("AT END \n");
-			printf("%d \n",(operators[place-1])->type);
-			printf("%d \n",(operands[oplace-1])->type);
-			printf("%d \n",(operands[oplace-2])->type);
+			//printf("AT END \n");
+			//printf("%d \n",(operators[place-1])->type);
+			//printf("%d \n",(operands[oplace-1])->type);
+			//printf("%d \n",(operands[oplace-2])->type);
 			createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
 		} else {
-			printf("Not enough operands 1\n");
-			syntaxError(1);
-			printf("%d \n",place);
+			//printf("Not enough operands 1\n");
+			syntaxError(11);
+			//printf("%d \n",place);
 			place--;
 		}
 	}
@@ -356,11 +357,11 @@ make_command_stream (int (*get_next_byte) (void *),
 		pop(1);
 	}
 	
-	int i = 0;
+	/*int i = 0;
 	while(i < cs->size){
 		print_command(cs->forest_pointer[i]);
 		i++;
-	}
+	}*/
 	//print_command(oper
   return cs;
 }
@@ -449,22 +450,22 @@ void push(command_t * cmd, int and){
 		}
 		if(place != 0 && (*cmd)->type == END_SUBSHELL_COMMAND){
 			if(!addedLast){
-				printf("OPERATOR PRECEDES )");
-				syntaxError(1);
+				//printf("OPERATOR PRECEDES )");
+				syntaxError(12);
 				return;
 			}
 			while((*(operators[place-1])).type != START_SUBSHELL_COMMAND){
 				if(oplace > 1){
-					printf("DOING PAREN, TREE \n");
+					//printf("DOING PAREN, TREE \n");
 					createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
 				} else {
-					syntaxError(1);
-					printf("Not enough operands for parentheses\n");
+					syntaxError(13);
+					//printf("Not enough operands for parentheses\n");
 					place--;
 				}
 				if(place == 0){
-					syntaxError(1);
-					printf("NEVER FOUND (");
+					syntaxError(14);
+					//printf("NEVER FOUND (");
 					return;
 				}
 			}
@@ -478,22 +479,22 @@ void push(command_t * cmd, int and){
 			cmd->type = SUBSHELL_COMMAND;
 			cmd->u.subshell_command = (operands[oplace-1]);
 			(operands[oplace-1]) = cmd;
-			print_command((operands[oplace-1]));
+			//print_command((operands[oplace-1]));
 			return;
 		} else if(place == 0 && (*cmd)->type == END_SUBSHELL_COMMAND){
-			printf("ERRoR, can't have ) first");
-			syntaxError(1);
+			//printf("ERRoR, can't have ) first");
+			syntaxError(15);
 			return;
 		}
 			
 		if(place != 0 && (*cmd)->type == SEQUENCE_COMMAND){
 			while(place != 0){
 				if(oplace > 1){
-					printf("HIT SEMICOLON, TREE \n");
+					//printf("HIT SEMICOLON, TREE \n");
 					createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
 				} else {
-					printf("Not enough operands 2\n");
-					syntaxError(1);
+					//printf("Not enough operands 2\n");
+					syntaxError(16);
 					place--;
 				}
 			}
@@ -508,27 +509,27 @@ void push(command_t * cmd, int and){
 			if((*(operators[place-1])).type == NEWLINE_COMMAND){
 				return;
 			} else if((*(operators[place-1])).type == REDIRECT_FROM_COMMAND || (*(operators[place-1])).type == REDIRECT_TO_COMMAND){
-				printf("ERROR FROM REDIRECT AND NEWLINE \n");
-				syntaxError(1);
+				//printf("ERROR FROM REDIRECT AND NEWLINE \n");
+				syntaxError(17);
 				return;	
 			}
 		} else if(place!=0 && (*(operators[place-1])).type == NEWLINE_COMMAND){
 			if((*cmd)->type == END_SUBSHELL_COMMAND){
 				pop(0);
-				printf("POPPED BECAUSE OF CLOSE PAREN \n");				
+				//printf("POPPED BECAUSE OF CLOSE PAREN \n");				
 			} else if(!addedLast && (*cmd)->type ==START_SUBSHELL_COMMAND){
 				pop(0);
-				printf("POPPED BECAUSE OF OPEN PAREN \n");
+				//printf("POPPED BECAUSE OF OPEN PAREN \n");
 			} else if(addedLast && (*cmd)->type ==START_SUBSHELL_COMMAND){
 				pop(0);
-				printf("TREATING NEWLINE AS SEMICOLON \n");
+				//printf("TREATING NEWLINE AS SEMICOLON \n");
 				while(place != 0){
 					if(oplace > 1){
-						printf("HIT SEMICOLON, TREE \n");
+						//printf("HIT SEMICOLON, TREE \n");
 						createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
 					}else {
-						printf("Not enough operands 3\n");
-						syntaxError(1);
+						//printf("Not enough operands 3\n");
+						syntaxError(18);
 						place--;
 					}
 
@@ -540,7 +541,7 @@ void push(command_t * cmd, int and){
 
 			
 		} else if (place!=0 && (*(*cmd)).type != START_SUBSHELL_COMMAND && ((*(operators[place-1])).type == REDIRECT_FROM_COMMAND || (*(operators[place-1])).type == REDIRECT_TO_COMMAND)){
-			syntaxError(1);
+			syntaxError(19);
 			//printf("SYNTAX BAD. GOTTA DO REDIRECT SHIT");
 		}
 		while((place!=0 && !parenFlag && !compareOperator((*(operators[place-1])).type,(*(*cmd)).type)) 
@@ -549,12 +550,12 @@ void push(command_t * cmd, int and){
 			//printf("oplace: %d place %d \n", oplace, place);
 //			printf("bottom of stack: %d \n ",(*(operators[0])).type);
 			if(oplace > 1){
-				printf("HIT SEMICOLON, TREE \n");
+				//printf("HIT SEMICOLON, TREE \n");
 				createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
 			} else {
-				printf("%d %d parenFlag \n", parenFlag, place);
-				printf("Not enough operands 4\n");
-				syntaxError(1);
+				//printf("%d %d parenFlag \n", parenFlag, place);
+				//printf("Not enough operands 4\n");
+				syntaxError(20);
 				place--;
 			}
 
@@ -576,24 +577,24 @@ void push(command_t * cmd, int and){
 	} else {
 		if(place!=0 && (*cmd)->type == NEWLINE_COMMAND){
 			if((*(operators[place-1])).type == REDIRECT_FROM_COMMAND || (*(operators[place-1])).type == REDIRECT_TO_COMMAND){
-				syntaxError(1);
-				printf("ERROR FROM REDIRECT AND NEWLINE \n");
+				syntaxError(21);
+				//printf("ERROR FROM REDIRECT AND NEWLINE \n");
 				return;	
 			}
 		} else if(place!=0 && (*(operators[place-1])).type == NEWLINE_COMMAND){
 			if(!addedLast){
 				pop(0);
-				printf("POPPED BECAUSE OF WORD AND NEWLINE \n");
+				//printf("POPPED BECAUSE OF WORD AND NEWLINE \n");
 			}else if(addedLast){
 				pop(0);
-				printf("TREATING NEWLINE AS SEMICOLON \n");
+				//printf("TREATING NEWLINE AS SEMICOLON \n");
 				while(place != 0){
 					if(oplace > 1){
-						printf("HIT SEMICOLON, TREE \n");
+						//printf("HIT SEMICOLON, TREE \n");
 						createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
 					} else {
-						printf("Not enough operands 5\n");
-						syntaxError(1);
+						//printf("Not enough operands 5\n");
+						syntaxError(22);
 						place--;
 					}
 				}
@@ -665,7 +666,7 @@ void createTree(command_t * operator, command_t * operandRight, command_t*  oper
 	(*(operator))->u.command[0] = *operandLeft;	
 	(*(operator))->u.command[1] = *operandRight;	
 	(operands[oplace-2]) = *operator;
-	print_command((operands[oplace-2]));
+	//print_command((operands[oplace-2]));
 	pop(1);
 	pop(0);	
 }
