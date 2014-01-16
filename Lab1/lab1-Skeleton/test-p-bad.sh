@@ -8,20 +8,19 @@ mkdir "$tmp" || exit
 cd "$tmp" || exit
 status=
 
-: << 'COMMENT'
+: << 'a'
+# Sanity check, to make sure it works with at least one good example.
+echo x >test0.sh || exit
+../timetrash -p test0.sh >test0.out 2>test0.err || exit
+echo '# 1
+x' >test0.exp || exit
+diff -u test0.exp test0.out || exit
+test ! -s test0.err || {
+  cat test0.err
+  exit 1
+}
 
-Sanity check, to make sure it works with at least one good example.
-#echo x >test0.sh || exit
-#../timetrash -p test0.sh >test0.out 2>test0.err || exit
-#echo '# 1
-# x' >test0.exp || exit
-#diff -u test0.exp test0.out || exit
-#test ! -s test0.err || {
-# cat test0.err
-# exit 1
-#}
-
-COMMENT
+a
 
 n=1
 for bad in \
@@ -33,11 +32,11 @@ for bad in \
   '; a' \
   'a ||' \
   'a
-     || b' \
+|| b' \
   'a
-     | b' \
+| b' \
   'a
-     ; b' \
+; b' \
   'a;;b' \
   'a&&&b' \
   'a|||b' \
@@ -50,7 +49,7 @@ for bad in \
   '( (a)' \
   'a>>>b'
 do
-  echo "$bad" >test$n.sh || exit
+echo "$bad" >test$n.sh || exit
   ../timetrash -p test$n.sh >test$n.out 2>test$n.err && {
     echo >&2 "test$n: unexpectedly succeeded for: $bad"
     status=1

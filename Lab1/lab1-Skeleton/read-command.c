@@ -332,7 +332,7 @@ make_command_stream (int (*get_next_byte) (void *),
 		buffcount = 0;
 	}
 
-	printf("NEARING THE END \n");
+//	printf("NEARING THE END \n");
 	if(place!=0){
 		pop(0);
 	}
@@ -442,7 +442,7 @@ void add_to_stack(int constant, char ** word, int length){
 }
 
 void push(command_t * cmd, int and){
-	printf("%p and type %d \n", *cmd, (*cmd)->type);
+	//printf("%p and type %d \n", *cmd, (*cmd)->type);
 	if(!and){
 		if((*cmd)->type == START_SUBSHELL_COMMAND){
 			parenFlag++;
@@ -569,7 +569,7 @@ void push(command_t * cmd, int and){
 		if((*cmd)->type != NEWLINE_COMMAND){
 			addedLast = 0;
 		}
-		printf("ADDEDLAST IS: %d \n", addedLast);
+		//printf("ADDEDLAST IS: %d \n", addedLast);
 //		printf("bottom of pushed stack: %d \n ",(*(operators[0])).type);
 //		printf("TYPE: %d \n",(*cmd)->type);
 		//printf("%d %d \n", cmd->type, place);
@@ -606,7 +606,7 @@ void push(command_t * cmd, int and){
 		operands[oplace] = *cmd;
 		oplace++;
 		addedLast = 1;
-		printf("ADDEDLAST IS: %d \n", addedLast);
+		//printf("ADDEDLAST IS: %d \n", addedLast);
 		if(place!= 0 && ((*(operators[place-1])).type == REDIRECT_FROM_COMMAND || (*(operators[place-1])).type == REDIRECT_TO_COMMAND)){
 			command_t command = malloc(sizeof(command_t));
 			command->type = SIMPLE_COMMAND;

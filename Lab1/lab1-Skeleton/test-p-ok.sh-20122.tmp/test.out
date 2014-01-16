@@ -1,0 +1,69 @@
+TREATING NEWLINE AS SEMICOLON 
+TREATING NEWLINE AS SEMICOLON 
+TREATING NEWLINE AS SEMICOLON 
+HIT SEMICOLON, TREE 
+    tr a-z A-Z  \
+  |
+    sort -u 
+HIT SEMICOLON, TREE 
+    cat</etc/passwd \
+  |
+    tr a-z A-Z  \
+  |
+    sort -u 
+TREATING NEWLINE AS SEMICOLON 
+HIT SEMICOLON, TREE 
+      cat</etc/passwd \
+    |
+      tr a-z A-Z  \
+    |
+      sort -u  \
+  ||
+    echo sort failed!
+TREATING NEWLINE AS SEMICOLON 
+HIT SEMICOLON, TREE 
+    tr a-z A-Z  \
+  |
+    sort -u>out
+HIT SEMICOLON, TREE 
+    cat</etc/passwd \
+  |
+    tr a-z A-Z  \
+  |
+    sort -u>out
+TREATING NEWLINE AS SEMICOLON 
+HIT SEMICOLON, TREE 
+      cat</etc/passwd \
+    |
+      tr a-z A-Z  \
+    |
+      sort -u>out \
+  ||
+    echo sort failed!
+HIT SEMICOLON, TREE 
+    a \
+  &&
+    b
+POPPED BECAUSE OF WORD AND NEWLINE 
+HIT SEMICOLON, TREE 
+      a \
+    &&
+      b \
+  ||
+    c 
+POPPED BECAUSE OF WORD AND NEWLINE 
+HIT SEMICOLON, TREE 
+    d  \
+  |
+    e 
+HIT SEMICOLON, TREE 
+        a \
+      &&
+        b \
+    ||
+      c  \
+  &&
+      d  \
+    |
+      e 
+POPPED BECAUSE OF WORD AND NEWLINE 
