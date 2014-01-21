@@ -1,1 +1,1 @@
-ls && pwd
+ls && pwd || ls -a
