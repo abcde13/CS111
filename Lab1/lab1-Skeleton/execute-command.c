@@ -121,6 +121,14 @@ execute_simple_command (command_t c)
 	}
 	else if(pid == 0)
 	{
+		if(c->input != 0)
+		{
+			// IMPLEMENT
+		}
+		if(c->output != 0)
+		{
+			// IMPLEMENT
+		}
 		execvp(c->u.word[0],c->u.word);
 		exit(c->status);
 	}
