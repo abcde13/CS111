@@ -66,7 +66,6 @@ void
 execute_and_operator (command_t c)
 {
 	do_command(c->u.command[0]);
-	printf("%d",c->u.command[0]->status);
 
 	if(c->u.command[0]->status == 0)
 	{
@@ -110,17 +109,25 @@ execute_sequence_operator (command_t c)
 void
 execute_simple_command (command_t c)
 {
-//	pid_t pid = fork();
+	pid_t pid = fork();
 	
-//	if(!pid)
-//	{
+	if(pid > 0)
+	{
+		int status = 0;
+		pid_t test = waitpid(pid,&status,0);
+		if(test == -1)
+			error(1,0,"Child process does not exist");
+		c->status = WEXITSTATUS(status);
+	}
+	else if(pid == 0)
+	{
 		execvp(c->u.word[0],c->u.word);
 		exit(c->status);
-//	}
-//	else
-//	{
-//		error(1,0,"You forked up");
-//	}
+	}
+	else
+	{
+		error(1,0,"You forked up");
+	}
 }
 
 void
