@@ -22,7 +22,9 @@ void do_command (command_t c);
 void execute_and_operator (command_t c);
 void execute_or_operator (command_t c);
 void execute_pipe_operator (command_t c);
+void execute_sequence_operator (command_t c);
 void execute_simple_command (command_t c);
+void execute_subshell_command (command_t c);
 
 int
 command_status (command_t c)
@@ -96,6 +98,13 @@ execute_or_operator (command_t c)
 void
 execute_pipe_operator (command_t c)
 {
+	// IMPLEMENT
+}
+
+void
+execute_sequence_operator (command_t c)
+{
+	// IMPLEMENT
 }
 
 void
@@ -112,4 +121,10 @@ execute_simple_command (command_t c)
 //	{
 //		error(1,0,"You forked up");
 //	}
+}
+
+void
+execute_subshell_command (command_t c)
+{
+	// IMPLEMENT
 }
