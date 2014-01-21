@@ -1,4 +1,4 @@
-true
+true # a random comment
 
 g++ -c foo.c
 
