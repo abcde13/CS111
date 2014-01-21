@@ -1,9 +1,19 @@
 // UCLA CS 111 Lab 1 command execution
 
+#include "alloc.h"
 #include "command.h"
 #include "command-internals.h"
 
 #include <error.h>
+#include <errno.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <pthread.h>
 
 /* FIXME: You may need to add #include directives, macro definitions,
    static function definitions, etc.  */
