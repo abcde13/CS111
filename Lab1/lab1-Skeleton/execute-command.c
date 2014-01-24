@@ -5,7 +5,6 @@
 #include "command-internals.h"
 
 #include <error.h>
-#include <errno.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -39,7 +38,6 @@ execute_command (command_t c, int time_travel)
      	add auxiliary functions and otherwise modify the source code.
     	You can also use external functions defined in the GNU C Library.  */
 	do_command(c);
-	//	error (1, 0, "command execution not yet implemented");
 }
 
 void
@@ -109,10 +107,11 @@ execute_pipe_operator (command_t c)
 	}
 	else if(childpid == 0)
 	{
+	//	dup2(fd[0],0);
 		close(fd[1]);
-		do_command(c->u.command[0]);
+		do_command(c->u.command[1]);
 		close(fd[0]);
-		exit(c->u.command[0]->status);
+		exit(c->u.command[1]->status);
 	}
 	else
 	{
@@ -122,7 +121,20 @@ execute_pipe_operator (command_t c)
 		if(parentpid == -1)
 		{
 			error(1,0,"You forked up the pipeline man");
-		}	
+		}
+		else if(parentpid == 0)
+		{
+			close(fd[0]);
+			do_command(c->u.command[0]);
+			close(fd[1]);
+			exit(c->u.command[0]->status);	
+		}
+		else
+		{
+			close(fd[0]);
+			close(fd[1]);
+			int completion_status;	
+		}
 	}	
 }
 
