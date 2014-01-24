@@ -51,6 +51,9 @@ do_command (command_t c)
 		case OR_COMMAND:
 			execute_or_operator(c);
 			break;
+		case PIPE_COMMAND:
+			execute_pipe_operator(c);
+			break;
 		case SIMPLE_COMMAND:
 			execute_simple_command(c);
 			break;
@@ -96,46 +99,52 @@ void
 execute_pipe_operator (command_t c)
 {
 	int fd[2];
-	int numbytes;
-	pid_t childpid;
 	pipe(fd);
-	childpid = fork();
 
-	if(childpid == -1)
+	pid_t l_pid;
+	l_pid = fork();
+
+	if(l_pid == -1)
 	{
 		error(1,0,"You forked up the pipeline man");
 	}
-	else if(childpid == 0)
+	else if(l_pid == 0)
 	{
-	//	dup2(fd[0],0);
-		close(fd[1]);
-		do_command(c->u.command[1]);
+		close(1);
+		dup2(fd[1],1);
 		close(fd[0]);
-		exit(c->u.command[1]->status);
-	}
-	else
-	{
-		pid_t parentpid;
-		parentpid = fork();
+		close(fd[1]);
 
-		if(parentpid == -1)
-		{
-			error(1,0,"You forked up the pipeline man");
-		}
-		else if(parentpid == 0)
-		{
-			close(fd[0]);
-			do_command(c->u.command[0]);
-			close(fd[1]);
-			exit(c->u.command[0]->status);	
-		}
-		else
-		{
-			close(fd[0]);
-			close(fd[1]);
-			int completion_status;	
-		}
-	}	
+		do_command(c->u.command[0]);
+		exit(c->u.command[0]->status);
+	}
+	
+	pid_t r_pid;
+	r_pid = fork();
+
+	if(r_pid == -1)
+	{
+		error(1,0,"You forked up the pipeline man");
+	}
+	else if(r_pid == 0)
+	{
+		close(0);
+		dup2(fd[0],0);
+		close(fd[0]);
+		close(fd[1]);
+
+		do_command(c->u.command[1]);
+		exit(c->u.command[1]->status);	
+	}
+	
+	close(fd[0]);
+	close(fd[1]);
+	int status_left_child,status_right_child;
+	
+	waitpid(l_pid,&status_left_child,0);
+	waitpid(r_pid,&status_right_child,0);
+	
+	c->status = status_right_child;	
 }
 
 void

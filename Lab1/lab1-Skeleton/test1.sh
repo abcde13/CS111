@@ -1,1 +1,1 @@
-ls > a.txt
+cat b.txt | od -c
