@@ -97,7 +97,33 @@ execute_or_operator (command_t c)
 void
 execute_pipe_operator (command_t c)
 {
-	// IMPLEMENT
+	int fd[2];
+	int numbytes;
+	pid_t childpid;
+	pipe(fd);
+	childpid = fork();
+
+	if(childpid == -1)
+	{
+		error(1,0,"You forked up the pipeline man");
+	}
+	else if(childpid == 0)
+	{
+		close(fd[1]);
+		do_command(c->u.command[0]);
+		close(fd[0]);
+		exit(c->u.command[0]->status);
+	}
+	else
+	{
+		pid_t parentpid;
+		parentpid = fork();
+
+		if(parentpid == -1)
+		{
+			error(1,0,"You forked up the pipeline man");
+		}	
+	}	
 }
 
 void
@@ -116,18 +142,29 @@ execute_simple_command (command_t c)
 		int status = 0;
 		pid_t test = waitpid(pid,&status,0);
 		if(test == -1)
-			error(1,0,"Child process does not exist");
+			error(1,0,"Child process failed");
 		c->status = WEXITSTATUS(status);
 	}
 	else if(pid == 0)
 	{
-		if(c->input != 0)
+		int fd_in,fd_out;
+		if(c->input)
 		{
-			// IMPLEMENT
+			fd_in = open(c->input, O_RDONLY, 0666);
+			if(fd_in == -1)
+				error(1,0,"Input file could not be opened");
+			if(dup2(fd_in,0) == -1)
+				error(1,0,"Input redirect failed");
+			close(fd_in);
 		}
-		if(c->output != 0)
+		if(c->output)
 		{
-			// IMPLEMENT
+			fd_out = open(c->output, O_WRONLY|O_CREAT|O_TRUNC,0666);
+			if(fd_out == -1)
+				error(1,0,"Output file could not be opened");
+			if(dup2(fd_out,1) == -1)
+				error(1,0,"Output redirect failed");
+			close(fd_out);
 		}
 		execvp(c->u.word[0],c->u.word);
 		exit(c->status);

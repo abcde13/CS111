@@ -1,1 +1,1 @@
-ls && pwd || ls -a
+ls > a.txt
