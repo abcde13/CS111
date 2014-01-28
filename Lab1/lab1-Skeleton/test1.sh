@@ -1,1 +1,1 @@
-cat b.txt | od -c
+ls && ( ( ls -a && touch c.txt ) || pwd)
