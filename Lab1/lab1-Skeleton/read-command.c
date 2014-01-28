@@ -288,6 +288,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			words = malloc(sizeof(char *) * size);
 			wordcount = 0;
 			buffcount = 0;
+			add_to_stack(NEWLINE,NULL,-1);
 		}
 		if(orFlag){
 			add_to_stack(PIPE_OPERATOR,NULL,-1);	
@@ -298,10 +299,10 @@ make_command_stream (int (*get_next_byte) (void *),
 		}  
 		if(c == ';'){
 			add_to_stack(SEMICOLON,NULL,-1);
-		} else {
+		} /*else {
 			anyflag = 0;
 			add_to_stack(NEWLINE,NULL,-1);
-		}
+		}*/
 		break;
             default :
 		if(!isalnum(c) && c!='!'&& c!='%' && c!='+'&& c!=',' && c!='-' && c!='.' &&  c!='/'&&  c!=':'&& c!='@'&& c!='^'&& c!='_'){
