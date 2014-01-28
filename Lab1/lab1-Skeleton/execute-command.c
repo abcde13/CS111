@@ -57,6 +57,9 @@ do_command (command_t c)
 		case SIMPLE_COMMAND:
 			execute_simple_command(c);
 			break;
+		case SUBSHELL_COMMAND:
+			execute_subshell_command(c);
+			break;
 		default:
 			error(1,0,"Command not found. Try again fucker.");
 			break;
@@ -199,5 +202,6 @@ execute_simple_command (command_t c)
 void
 execute_subshell_command (command_t c)
 {
-	// IMPLEMENT
+	do_command(c->u.subshell_command);
+	c->status = c->u.subshell_command->status;	// IMPLEMENT
 }

@@ -1,4 +1,1 @@
-# Hi
-cat b.txt | od -c
-
-
+ls -a
