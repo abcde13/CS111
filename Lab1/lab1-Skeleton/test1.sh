@@ -1,3 +1,2 @@
-ls -a; 
+ls | sort -r > pipe.txt
 
-(ls -t | sort > b.txt) && pwd || echo HI WORLD
