@@ -275,7 +275,8 @@ make_command_stream (int (*get_next_byte) (void *),
                 break;
 	    case '\n' : 
 		lineCounter++;
-	    case ';':
+	    case ';':{
+		int added = 0;
 		anyflag = 1;
 		if(wordFlag){
 			wordFlag = 0;
@@ -289,6 +290,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			wordcount = 0;
 			buffcount = 0;
 			add_to_stack(NEWLINE,NULL,-1);
+			added = 1;
 		}
 		if(orFlag){
 			add_to_stack(PIPE_OPERATOR,NULL,-1);	
@@ -297,14 +299,14 @@ make_command_stream (int (*get_next_byte) (void *),
 			syntaxError(lineCounter);
 			andFlag = 0;
 		}  
-		if(c == ';'){
+		if(c == ';' && !added){
 			add_to_stack(SEMICOLON,NULL,-1);
-		} /*else {
+		} else if( c== '\n' && !added){
 			anyflag = 0;
 			add_to_stack(NEWLINE,NULL,-1);
-		}*/
+		}
 		break;
-            default :
+	} default :
 		if(!isalnum(c) && c!='!'&& c!='%' && c!='+'&& c!=',' && c!='-' && c!='.' &&  c!='/'&&  c!=':'&& c!='@'&& c!='^'&& c!='_'){
 			syntaxError(lineCounter);
 		}else{
