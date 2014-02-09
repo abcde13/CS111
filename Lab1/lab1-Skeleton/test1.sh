@@ -1,1 +1,2 @@
-ls && ( ( ls -a && touch c.txt ) || pwd)
+ls | sort -r > pipe.txt
+

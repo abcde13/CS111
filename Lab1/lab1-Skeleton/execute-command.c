@@ -90,6 +90,9 @@ do_command (command_t c)
 		case SUBSHELL_COMMAND:
 			execute_subshell_command(c);
 			break;
+		case SEQUENCE_COMMAND:
+			execute_sequence_operator(c);
+			break;
 		default:
 			error(1,0,"Command not found. Try again fucker.");
 			break;
@@ -184,6 +187,9 @@ void
 execute_sequence_operator (command_t c)
 {
 	// IMPLEMENT
+	do_command(c->u.command[0]);
+	do_command(c->u.command[1]);
+	c->status = c->u.command[1]->status;
 }
 
 void
@@ -221,6 +227,11 @@ execute_simple_command (command_t c)
 			close(fd_out);
 		}
 		execvp(c->u.word[0],c->u.word);
+		if(execvp(c->u.word[0],c->u.word) < 0)
+		{
+			error(1,0,"Error in execution of simple command \n");
+			return;
+		}
 		exit(c->status);
 	}
 	else
