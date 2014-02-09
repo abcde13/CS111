@@ -1,5 +1,4 @@
 #! /bin/sh
-
 # UCLA CS 111 Lab 1 - Test that valid syntax is processed correctly.
 
 tmp=$0-$$.tmp
@@ -29,6 +28,12 @@ g<h
 
 # This is a weird example: nobody would ever want to run this.
 a<b>c|d<e>f|g<h>i
+
+#Special test case for lab 2
+ls | od -c > a
+
+#Special case two
+(b < a) && cat a || pwd
 EOF
 
 cat >test.exp <<'EOF'
@@ -76,6 +81,18 @@ cat >test.exp <<'EOF'
     d<e>f \
   |
     g<h>i
+# 9
+    ls \
+  |
+    od -c>a
+# 10
+      (
+       b<a
+      ) \
+    &&
+      cat a \
+  ||
+    pwd
 EOF
 
 ../timetrash -p test.sh >test.out 2>test.err || exit

@@ -45,7 +45,7 @@ for bad in \
   '(a|b' \
   'a;b)' \
   '( (a)' \
-  'a>>>b'
+  'a>>>b' 
 do
 echo "$bad" >test$n.sh || exit
   ../timetrash -p test$n.sh >test$n.out 2>test$n.err && {
