@@ -1,4 +1,5 @@
 // UCLA CS 111 Lab 1 command execution
+#define _GNU_SOURCE
 
 #include "alloc.h"
 #include "command.h"
@@ -18,12 +19,16 @@
    static function definitions, etc.  */
 
 void do_command (command_t c);
+void do_thread (command_t c);
+int runnable (pthread_t thread);
 void execute_and_operator (command_t c);
 void execute_or_operator (command_t c);
 void execute_pipe_operator (command_t c);
 void execute_sequence_operator (command_t c);
 void execute_simple_command (command_t c);
 void execute_subshell_command (command_t c);
+
+int num_threads = 0;
 
 int
 command_status (command_t c)
@@ -37,7 +42,32 @@ execute_command (command_t c, int time_travel)
   /*	FIXME: Replace this with your implementation.  You may need to
      	add auxiliary functions and otherwise modify the source code.
     	You can also use external functions defined in the GNU C Library.  */
+	if(time_travel)
+		error(1,0,"Not yet implemented");
+	else
+	{
+		do_command(c);
+	}
+}
+
+int
+runnable (pthread_t thread)
+{
+	
+}
+
+void
+do_thread (command_t c)
+{
+	while(!runnable(pthread_self()))
+	{
+		pthread_yield();
+	}
 	do_command(c);
+	num_threads--;
+	rmv_dependencies(pthread_self());
+	free(c);
+	pthread_exit(0);	
 }
 
 void
