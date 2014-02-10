@@ -27,7 +27,7 @@ void execute_pipe_operator (command_t c);
 void execute_sequence_operator (command_t c);
 void execute_simple_command (command_t c);
 void execute_subshell_command (command_t c);
-void rmv_dependencies(pthread_t);
+void rmv_dependencies(pthread_t thread);
 
 int num_threads = 0;
 
@@ -52,7 +52,7 @@ execute_command (command_t c, int time_travel)
      	add auxiliary functions and otherwise modify the source code.
     	You can also use external functions defined in the GNU C Library.  */
 	if(time_travel){
-		error(1,0,"Not yet implemented");
+//		error(1,0,"Not yet implemented");
 		pthread_t tid;
 		int status = pthread_create(&tid, NULL, (void *) &do_thread, c);
 	} else	{
@@ -65,6 +65,11 @@ runnable (pthread_t thread)
 {
 	return 1;
 	
+}
+
+void
+rmv_dependencies (pthread_t thread)
+{
 }
 
 void
