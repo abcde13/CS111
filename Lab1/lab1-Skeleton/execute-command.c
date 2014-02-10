@@ -19,7 +19,7 @@
    static function definitions, etc.  */
 
 void do_command (command_t c);
-void do_thread (command_t c);
+void do_thread (void* c);
 int runnable (pthread_t thread);
 void execute_and_operator (command_t c);
 void execute_or_operator (command_t c);
@@ -27,8 +27,16 @@ void execute_pipe_operator (command_t c);
 void execute_sequence_operator (command_t c);
 void execute_simple_command (command_t c);
 void execute_subshell_command (command_t c);
+void rmv_dependencies(pthread_t);
 
 int num_threads = 0;
+
+struct node_d {
+  pthread_t pt;
+  command_t c;
+  pthread_t left;
+  pthread_t right;
+};
 
 int
 command_status (command_t c)
@@ -36,16 +44,18 @@ command_status (command_t c)
   return c->status;
 }
 
+
 void
 execute_command (command_t c, int time_travel)
 {
   /*	FIXME: Replace this with your implementation.  You may need to
      	add auxiliary functions and otherwise modify the source code.
     	You can also use external functions defined in the GNU C Library.  */
-	if(time_travel)
+	if(time_travel){
 		error(1,0,"Not yet implemented");
-	else
-	{
+		pthread_t tid;
+		int status = pthread_create(&tid, NULL, (void *) &do_thread, c);
+	} else	{
 		do_command(c);
 	}
 }
@@ -53,12 +63,14 @@ execute_command (command_t c, int time_travel)
 int
 runnable (pthread_t thread)
 {
+	return 1;
 	
 }
 
 void
-do_thread (command_t c)
+do_thread ( void* c)
 {
+	c = (command_t) c;
 	while(!runnable(pthread_self()))
 	{
 		pthread_yield();
