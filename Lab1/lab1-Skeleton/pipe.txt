@@ -1,7 +1,11 @@
 timetrash
+test.sh
 test-p-ok.sh
 test-p-bad.sh
 test1.sh
+temp.sh
+temp
+sample.txt
 r.sh
 README
 read-command.o
@@ -13,6 +17,8 @@ out
 Makefile
 main.o
 main.c
+lab1-joraaver
+jsc
 gvim
 execute-command.o
 execute-command.c

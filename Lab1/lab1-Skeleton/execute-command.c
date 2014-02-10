@@ -20,6 +20,7 @@
 
 void do_command (command_t c);
 void do_thread (void* c);
+void print_dependency_matrix ();
 int runnable (pthread_t thread);
 void execute_and_operator (command_t c);
 void execute_or_operator (command_t c);
@@ -27,16 +28,13 @@ void execute_pipe_operator (command_t c);
 void execute_sequence_operator (command_t c);
 void execute_simple_command (command_t c);
 void execute_subshell_command (command_t c);
-void rmv_dependencies(pthread_t thread);
+void rmv_dependencies (pthread_t thread);
+void add_dependencies (command_t cmd, pthread_t thread);
 
 int num_threads = 0;
+pthread_mutex_t num_threads_lock = PTHREAD_MUTEX_INITIALIZER;
 
-struct node_d {
-  pthread_t pt;
-  command_t c;
-  pthread_t left;
-  pthread_t right;
-};
+int dependency_table[10000][10000];
 
 int
 command_status (command_t c)
@@ -44,6 +42,21 @@ command_status (command_t c)
   return c->status;
 }
 
+void
+print_dependency_matrix ()
+{
+	int i,j;
+	printf("%i",num_threads);
+	for (i = 0; i < num_threads; i++)
+	{
+		for(j = 0; j < num_threads; j++)
+		{
+			printf("%i ",dependency_table[i][j]);
+		}
+		printf("\n");
+	}
+}
+	
 
 void
 execute_command (command_t c, int time_travel)
@@ -51,11 +64,30 @@ execute_command (command_t c, int time_travel)
   /*	FIXME: Replace this with your implementation.  You may need to
      	add auxiliary functions and otherwise modify the source code.
     	You can also use external functions defined in the GNU C Library.  */
+	
+
 	if(time_travel){
-//		error(1,0,"Not yet implemented");
+		int i,j;
+		for (i = 0; i < 1000; i++)
+		{
+			for(j = 0; j < 1000; j++)
+			{
+				dependency_table[i][j] = 0;
+			}
+		}
 		pthread_t tid;
 		int status = pthread_create(&tid, NULL, (void *) &do_thread, c);
-	} else	{
+		if(!status)
+		{
+			pthread_mutex_lock(&num_threads_lock);
+			num_threads++;
+			add_dependencies(c,tid);
+			print_dependency_matrix();	
+			pthread_mutex_unlock(&num_threads_lock);
+		}
+	} 
+	else	
+	{
 		do_command(c);
 	}
 }
@@ -63,12 +95,16 @@ execute_command (command_t c, int time_travel)
 int
 runnable (pthread_t thread)
 {
-	return 1;
-	
+	return 1;	
 }
 
 void
 rmv_dependencies (pthread_t thread)
+{
+}
+
+void
+add_dependencies (command_t cmd, pthread_t thread)
 {
 }
 
@@ -81,9 +117,11 @@ do_thread ( void* c)
 		pthread_yield();
 	}
 	do_command(c);
+	pthread_mutex_lock(&num_threads_lock);
 	num_threads--;
+	pthread_mutex_unlock(&num_threads_lock);
 	rmv_dependencies(pthread_self());
-	free(c);
+//	free(c);
 	pthread_exit(0);	
 }
 
