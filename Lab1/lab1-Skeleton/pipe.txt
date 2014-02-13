@@ -5,7 +5,6 @@ test-p-bad.sh
 test1.sh
 temp.sh
 temp
-sample.txt
 r.sh
 README
 read-command.o
