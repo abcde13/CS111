@@ -30,12 +30,18 @@ void execute_simple_command (command_t c);
 void execute_subshell_command (command_t c);
 void rmv_dependencies (pthread_t thread);
 void add_dependencies (char * word, int this_index);
-void find_dependencies (command_t cmd);
+void find_threads (command_t cmd);
+void extract_dependencies (command_t cmd, int thread_id);
+void locate_dependencies (char * file, int thread_id);
+int analyze_subtree (char * file, command_t cmd);
 
 int num_threads = 0;
 pthread_mutex_t num_threads_lock = PTHREAD_MUTEX_INITIALIZER;
 
 int dependency_table[10000][10000];
+
+command_t pthread_list[10000];
+int index_counter = 0;
 
 int
 command_status (command_t c)
@@ -78,9 +84,9 @@ execute_command (command_t c, int time_travel, command_stream_t cs)
     	You can also use external functions defined in the GNU C Library.  */
 	
 
-	num_threads = num_sequence_commands(c);
+	num_threads = num_sequence_commands(c)+1;
 	if(time_travel){
-		int i,j;
+		int i,j,k;
 		for (i = 0; i < num_threads; i++)
 		{
 			for(j = 0; j < num_threads; j++)
@@ -88,8 +94,13 @@ execute_command (command_t c, int time_travel, command_stream_t cs)
 				dependency_table[i][j] = 0;
 			}
 		}
+		find_threads(c);
+		for (k = 0; k < index_counter; k++)
+		{
+	//		printf("%i\n",k);
+			extract_dependencies(pthread_list[k], k);
+		}
 		print_dependency_matrix();
-		find_dependencies(c);
 //		pthread_t tid;
 //		int status = pthread_create(&tid, NULL, (void *) &do_thread, c);
 /*		if(!status)
@@ -111,24 +122,85 @@ runnable (pthread_t thread)
 }
 
 void
-find_dependencies (command_t cmd)
+find_threads (command_t cmd)
+{
+	if(cmd->type != SEQUENCE_COMMAND)
+	{
+		pthread_list[index_counter] = cmd;
+		index_counter++;
+	}
+	
+	else
+	{
+		find_threads(cmd->u.command[0]);
+		find_threads(cmd->u.command[1]);
+	}
+}
+
+int
+analyze_subtree (char * file, command_t cmd)
+{
+	if(cmd->type == SIMPLE_COMMAND)
+	{
+		//fprintf(stderr,"%s\n",cmd->input);
+		if(cmd->input)
+		{
+			if(strcmp(cmd->input,file) == 0)
+			{
+				return 1;	
+			}
+		}
+		return 0;
+	}
+
+	else
+	{
+		switch(cmd->type)
+		{
+			case SUBSHELL_COMMAND:
+				return analyze_subtree(file,cmd->u.subshell_command);
+			default:
+				return analyze_subtree(file,cmd->u.command[0]) + analyze_subtree(file,cmd->u.command[1]);
+		}
+	}
+	return 0;
+}
+
+void
+locate_dependencies (char * file, int thread_id)
+{
+	int k = thread_id+1;
+	int dependency_found;
+	for(; k < index_counter; k++)
+	{
+		dependency_found = analyze_subtree(file, pthread_list[k]);
+		if(dependency_found) {
+			dependency_table[k][thread_id] = 1;	
+		}
+	}
+}
+
+void
+extract_dependencies (command_t cmd, int thread_id)
 {
 	if(cmd->type == SIMPLE_COMMAND)
 	{
 		if(cmd->output)
 		{
-			add_dependencies(cmd->output,0);
+			locate_dependencies(cmd->output, thread_id);	
 		}
-		return;		
+		return;	
 	}
-	
 	else
 	{
-		if(cmd->type == SUBSHELL_COMMAND)
-			find_dependencies(cmd->u.subshell_command);
-		else{
-			find_dependencies(cmd->u.command[0]);
-			find_dependencies(cmd->u.command[1]);
+		switch(cmd->type)
+		{
+			case SUBSHELL_COMMAND:
+				extract_dependencies(cmd->u.subshell_command,thread_id);
+				break;
+			default:
+				extract_dependencies(cmd->u.command[0],thread_id);
+				extract_dependencies(cmd->u.command[1],thread_id);
 		}
 	}
 }
@@ -141,6 +213,7 @@ rmv_dependencies (pthread_t thread)
 void
 add_dependencies (char * word, int this_index)
 {
+		
 }
 
 void

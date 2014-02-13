@@ -23,7 +23,7 @@ int addedLast = 0;
 int parenFlag = 0;
 int anyflag = 0;
 int lineCounter = 1;
-int size = 100; 
+int size = 1; 
 
 struct command_stream
 {
@@ -65,18 +65,30 @@ make_command_stream (int (*get_next_byte) (void *),
     int buffcount = 0;
     cs = malloc(sizeof(command_stream_t*) * size);
     cs->forest_pointer = malloc(size);
+    cs->index = 0;
     char * buff = malloc(sizeof(char) * size);
     char ** words = malloc(sizeof(char *) * size);
+    int i = 0;
+    for(;i<size;i++){ 
+        words[i] = malloc(sizeof(char)*size);
+	words[i] = '\0';
+    }
     operators =  malloc(sizeof(command_t*) * size);
     operands =  malloc(sizeof(command_t*) * size);
     
     while(1){
-	while((wordcount * sizeof(char *))>( size * sizeof(char *))){
+	printf("%c CHARACTER \n",c);
+	while((wordcount * sizeof(char *))>=( size * sizeof(char *))){
 		size += 1;
 		char ** temp = realloc(words,sizeof(char) * size);
 		if(temp != NULL) {
 			words = temp;
 		}
+		    int i = 0;
+		    for(;i<size;i++){ 
+			char * temp = realloc(words[i],sizeof(char)*size);
+			words[i] = temp;
+		    }
 		printf("CHODES %i \n",size);
 		//words = realloc(words,sizeof(char *) * size);
 	}
@@ -94,6 +106,8 @@ make_command_stream (int (*get_next_byte) (void *),
 	}
 	
 	if (c == ' ' && wordFlag && !spaceFlag){
+		char * temp = realloc(words[wordcount],sizeof(char)*buffcount);
+		words[wordcount] = temp;
 		words[wordcount] = buff;
 		wordcount++;
 		buff = malloc(sizeof(char) * size);
@@ -121,6 +135,8 @@ make_command_stream (int (*get_next_byte) (void *),
 			wordFlag = 0;
 			if(buff[0] != '\0'){
 //				printf("character: %c \n", buff[buffcount]);
+				char * temp = realloc(words[wordcount],sizeof(char)*buffcount);
+				words[wordcount] = temp;
 				words[wordcount] = buff;
 				wordcount++;
 			}
@@ -148,6 +164,8 @@ make_command_stream (int (*get_next_byte) (void *),
 			wordFlag = 0;
 			if(buff[0] != '\0'){
 //				printf("character: %c \n", buff[buffcount]);
+				char * temp = realloc(words[wordcount],sizeof(char)*buffcount);
+				words[wordcount] = temp;
 				words[wordcount] = buff;
 				wordcount++;
 			}
@@ -174,6 +192,8 @@ make_command_stream (int (*get_next_byte) (void *),
 			wordFlag = 0;
 			if(buff[0] != '\0'){
 //				printf("character: %c \n", buff[buffcount]);
+				char * temp = realloc(words[wordcount],sizeof(char)*buffcount);
+				words[wordcount] = temp;
 				words[wordcount] = buff;
 				wordcount++;
 			}
@@ -204,6 +224,8 @@ make_command_stream (int (*get_next_byte) (void *),
 			wordFlag = 0;
 			if(buff[0] != '\0'){
 //				printf("character: %c \n", buff[buffcount]);
+				char * temp = realloc(words[wordcount],sizeof(char)*buffcount);
+				words[wordcount] = temp;
 				words[wordcount] = buff;
 				wordcount++;
 			}
@@ -234,6 +256,8 @@ make_command_stream (int (*get_next_byte) (void *),
 			wordFlag = 0;
 			if(buff[0] != '\0'){
 //				printf("character: %c \n", buff[buffcount]);
+				char * temp = realloc(words[wordcount],sizeof(char)*buffcount);
+				words[wordcount] = temp;
 				words[wordcount] = buff;
 				wordcount++;
 			}
@@ -261,6 +285,8 @@ make_command_stream (int (*get_next_byte) (void *),
 			wordFlag = 0;
 			if(buff[0] != '\0'){
 //				printf("character: %c \n", buff[buffcount]);
+				char * temp = realloc(words[wordcount],sizeof(char)*buffcount);
+				words[wordcount] = temp;
 				words[wordcount] = buff;
 				wordcount++;
 			}
@@ -289,6 +315,8 @@ make_command_stream (int (*get_next_byte) (void *),
 		anyflag = 1;
 		if(wordFlag){
 			wordFlag = 0;
+			char * temp = realloc(words[wordcount],sizeof(char)*buffcount);
+			words[wordcount] = temp;
 			words[wordcount] = buff;
 			anyflag = 0;
 			wordcount++;
@@ -330,7 +358,7 @@ make_command_stream (int (*get_next_byte) (void *),
 				add_to_stack(PIPE_OPERATOR,NULL,-1);
 				orFlag = 0;
 				//printf("%c \n", c);
-				while(buffcount > size){
+				while(buffcount >= size-1){
 					size += 1;
 					char * temp = realloc(buff,sizeof(char) * size);
 					if(temp != NULL) {
@@ -342,8 +370,8 @@ make_command_stream (int (*get_next_byte) (void *),
 				buffcount++;
 				wordFlag = 1;
 			} else {
-				//printf("%c \n", c);
-				/*while(buffcount > size){
+				printf("INCREASING \n");
+				while(buffcount >= size-1){
 					printf("CHODEB \n");
 					size = size + 1;
 					char * temp = realloc(buff,sizeof(char) * size);
@@ -353,7 +381,7 @@ make_command_stream (int (*get_next_byte) (void *),
 						printf("FUCK ME,RIGHT ?\n");
 					}
 					printf("%i \n",size);
-				}*/
+				}
 			        buff[buffcount] = c;
 				buffcount++;
 				wordFlag = 1;
@@ -403,13 +431,14 @@ make_command_stream (int (*get_next_byte) (void *),
 		}
 	}
 	if(oplace==1){
-		while(cs->size > size){
+		while(cs->size >= size){
 			size += 1;
-			command_t * temp = realloc(operators,size);
+			command_t * temp = realloc(cs->forest_pointer,size);
 			if(temp != NULL){
 				cs->forest_pointer = temp;
 			}
-		}
+		}	
+		//printf("CHODEF %i\n",size);	
 		cs->forest_pointer[cs->size] = operands[oplace-1];
 		cs->size++;
 		pop(1);
@@ -427,6 +456,21 @@ make_command_stream (int (*get_next_byte) (void *),
 		free(words[i]);
 	}
 	free(words);*/
+
+	i = 0;
+	printf("DONE WITH THE FUCKIGN TREE of size: %i %i \n",cs->size,wordcount);
+	for(; words[i] !='\0' ; i++){
+		int j =0;
+		printf("PRINTING FAGGS");
+		for(; words[i][j] != '\0'; j++){
+			printf("%c",words[i][j]);
+		}
+		printf("\n");
+	}
+	//cs->size--;
+	/*printf("%i %i \n",cs->size,size);
+	command_t * temp = realloc(cs->forest_pointer,size);
+	cs->forest_pointer = temp;*/
 	return cs;
   // return 0;
 }
@@ -434,8 +478,13 @@ make_command_stream (int (*get_next_byte) (void *),
 command_t
 read_command_stream (command_stream_t s)
 {
+	
+  printf("%i \n", s->index);
   command_t b = s->forest_pointer[s->index];
   s->index++;
+  if(s->index >= s->size+1){
+	return 0;
+  }
   return b;
 }
 
@@ -509,7 +558,7 @@ void add_to_stack(int constant, char ** word, int length){
 
 void push(command_t * cmd, int and){
 	if(and){
-		while(oplace > size){
+		while(oplace >= size){
 			size += 1;
 			command_t * temp = realloc(operands,sizeof(char) * size);
 			if(temp != NULL) {
@@ -518,7 +567,7 @@ void push(command_t * cmd, int and){
 			printf("CHODET %i\n",size);
 		}
 	} else {
-		while(place > size){
+		while(place >= size){
 			size += 1;
 			command_t * temp = realloc(operators,sizeof(char) * size);
 			if(temp != NULL) {
@@ -634,14 +683,14 @@ void push(command_t * cmd, int and){
 					}
 
 				}
-				while(cs->size > size){
+				while(cs->size >= size-1){
 					size += 1;
-					command_t * temp = realloc(operators,size);
+					command_t * temp = realloc(cs->forest_pointer,size);
 					if(temp != NULL){
 						cs->forest_pointer = temp;
 					}
-					printf("CHODEX %i\n",size);
 				}
+				printf("CHODEX %i\n",size);
 				cs->forest_pointer[cs->size] = operands[oplace-1];
 				cs->size++;
 				pop(1);
@@ -706,14 +755,14 @@ void push(command_t * cmd, int and){
 						place--;
 					}
 				}
-				while(cs->size > size){
+				while(cs->size >= size-1){
 					size += 1;
-					command_t * temp = realloc(operators,size);
+					command_t * temp = realloc(cs->forest_pointer,size);
 					if(temp != NULL){
 						cs->forest_pointer = temp;
 					}
-					printf("CHODEF %i\n",size);
 				}
+				printf("CHODEF %i\n",size);
 				cs->forest_pointer[cs->size] = operands[oplace-1];
 				cs->size++;
 				pop(1);
