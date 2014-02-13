@@ -289,7 +289,11 @@ make_command_stream (int (*get_next_byte) (void *),
 			words = malloc(sizeof(char *) * size);
 			wordcount = 0;
 			buffcount = 0;
-			add_to_stack(NEWLINE,NULL,-1);
+			if(c == ';'){
+				add_to_stack(SEMICOLON,NULL,-1);
+			} else {
+				add_to_stack(NEWLINE,NULL,-1);
+			}
 			added = 1;
 		}
 		if(orFlag){
@@ -368,7 +372,10 @@ make_command_stream (int (*get_next_byte) (void *),
 			//printf("%d \n",(operands[oplace-1])->type);
 			//printf("%d \n",(operands[oplace-2])->type);
 			createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
+		} else if (operators[place-1]->type == SEQUENCE_COMMAND){
+			pop(0);
 		} else {
+			printf("FUCK + %i + %i \n",oplace, place);
 			//printf("Not enough operands 1\n");
 			syntaxError(lineCounter);
 			//printf("%d \n",place);
@@ -514,9 +521,9 @@ void push(command_t * cmd, int and){
 			syntaxError(lineCounter);
 			return;
 		}
-		printf("CHECKING");			
-		if(place != 0 && (*cmd)->type == SEQUENCE_COMMAND){
-			while(place != 0 && (operators[place])->type != START_SUBSHELL_COMMAND){
+		if(place != 0 && (*cmd)->type == SEQUENCE_COMMAND && !parenFlag){
+			printf("CHECKING + %i \n",parenFlag);			
+			while(place != 0){
 				if(oplace > 1){
 					//printf("HIT SEMICOLON, TREE \n");
 					createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
