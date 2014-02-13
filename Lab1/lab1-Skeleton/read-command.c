@@ -521,22 +521,35 @@ void push(command_t * cmd, int and){
 			syntaxError(lineCounter);
 			return;
 		}
-		if(place != 0 && (*cmd)->type == SEQUENCE_COMMAND && !parenFlag){
-			printf("CHECKING + %i \n",parenFlag);			
-			while(place != 0){
-				if(oplace > 1){
+		if(place != 0 && (*cmd)->type == SEQUENCE_COMMAND){
+		/*	printf("CHECKING + %i \n",parenFlag);			
+			//while(place != 0){
+			//	if(oplace > 1){
 					//printf("HIT SEMICOLON, TREE \n");
-					createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
-				} else {
+					command_t cmd = malloc(sizeof(100));
+					cmd->output = malloc(sizeof(char*));
+					cmd->input = malloc(sizeof(char*));
+					cmd->output = 0;
+					cmd->input = 0;
+					cmd->type = SEQUENCE_COMMAND;
+					cmd->u.command[0] = operands[oplace-2];
+					cmd->u.command[1] = operands[oplace-1];
+					pop(1);
+					pop(0);
+					pop(0);
+					command_t * k = &cmd;
+					push(k,0);
+					
+		//		} else {
 					//printf("Not enough operands 2\n");
-					syntaxError(lineCounter);
-					place--;
-				}
-			}
+		//			syntaxError(lineCounter);
+		//			place--;
+		//		}
+		//	}
 			cs->forest_pointer[cs->size] = operands[oplace-1];
 			cs->size++;
 			pop(1);
-			return;
+			return;*/
 		}
 		if(place==0 && oplace==0 && (*cmd)->type == NEWLINE_COMMAND){
 			return;
