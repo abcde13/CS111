@@ -39,6 +39,7 @@ void find_threads (command_t cmd);
 void extract_dependencies (command_t cmd, int thread_id);
 void locate_dependencies (char * file, int thread_id);
 int analyze_subtree (char * file, command_t cmd);
+void cleanup();
 
 int num_threads = 0;
 
@@ -155,6 +156,8 @@ execute_command (command_t c, int time_travel)
 				//print_dependency_matrix(); 
 			}
 		//	print_dependency_matrix();
+			free(threads);
+			free(args);
 		}
 	} 
 	else	
@@ -458,4 +461,16 @@ execute_subshell_command (command_t c)
 {
 	do_command(c->u.subshell_command);
 	c->status = c->u.subshell_command->status;	// IMPLEMENT
+}
+
+void 
+cleanup()
+{
+//	int i;
+//	for(i = 0; i < 10000; i++)
+//	{
+//		free(dependency_table[i]);
+//	}
+//	free(dependency_table);
+//	free(pthread_list);
 }
