@@ -29,7 +29,8 @@ void execute_sequence_operator (command_t c);
 void execute_simple_command (command_t c);
 void execute_subshell_command (command_t c);
 void rmv_dependencies (pthread_t thread);
-void add_dependencies (command_t cmd, pthread_t thread);
+void add_dependencies (char * word, int this_index);
+void find_dependencies (command_t cmd);
 
 int num_threads = 0;
 pthread_mutex_t num_threads_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -46,7 +47,6 @@ void
 print_dependency_matrix ()
 {
 	int i,j;
-	printf("%i",num_threads);
 	for (i = 0; i < num_threads; i++)
 	{
 		for(j = 0; j < num_threads; j++)
@@ -78,31 +78,26 @@ execute_command (command_t c, int time_travel, command_stream_t cs)
     	You can also use external functions defined in the GNU C Library.  */
 	
 
-	int nums = num_sequence_commands(c);
-	printf("%i\n",nums);
-	
+	num_threads = num_sequence_commands(c);
 	if(time_travel){
 		int i,j;
-		int nums = num_sequence_commands(c);
-		printf("%i\n",nums);
-		for (i = 0; i < 1000; i++)
+		for (i = 0; i < num_threads; i++)
 		{
-			for(j = 0; j < 1000; j++)
+			for(j = 0; j < num_threads; j++)
 			{
 				dependency_table[i][j] = 0;
 			}
 		}
-		pthread_t tid;
-		int status = pthread_create(&tid, NULL, (void *) &do_thread, c);
-		if(!status)
+		print_dependency_matrix();
+		find_dependencies(c);
+//		pthread_t tid;
+//		int status = pthread_create(&tid, NULL, (void *) &do_thread, c);
+/*		if(!status)
 		{
-			pthread_mutex_lock(&num_threads_lock);
-			num_threads++;
 			add_dependencies(c,tid);
 			print_dependency_matrix();	
-			pthread_mutex_unlock(&num_threads_lock);
 		}
-	} 
+*/	} 
 	else	
 	{
 		do_command(c);
@@ -116,12 +111,35 @@ runnable (pthread_t thread)
 }
 
 void
+find_dependencies (command_t cmd)
+{
+	if(cmd->type == SIMPLE_COMMAND)
+	{
+		if(cmd->output)
+		{
+			add_dependencies(cmd->output,0);
+		}
+		return;		
+	}
+	
+	else
+	{
+		if(cmd->type == SUBSHELL_COMMAND)
+			find_dependencies(cmd->u.subshell_command);
+		else{
+			find_dependencies(cmd->u.command[0]);
+			find_dependencies(cmd->u.command[1]);
+		}
+	}
+}
+
+void
 rmv_dependencies (pthread_t thread)
 {
 }
 
 void
-add_dependencies (command_t cmd, pthread_t thread)
+add_dependencies (char * word, int this_index)
 {
 }
 
@@ -134,9 +152,7 @@ do_thread ( void* c)
 		pthread_yield();
 	}
 	do_command(c);
-	pthread_mutex_lock(&num_threads_lock);
 	num_threads--;
-	pthread_mutex_unlock(&num_threads_lock);
 	rmv_dependencies(pthread_self());
 //	free(c);
 	pthread_exit(0);	
