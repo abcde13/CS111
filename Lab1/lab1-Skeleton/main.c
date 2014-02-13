@@ -65,7 +65,7 @@ main (int argc, char **argv)
       else
 	{
 	  last_command = command;
-	  execute_command (command, time_travel,command_stream);
+	  execute_command (command, time_travel);
 	}
     }
 
