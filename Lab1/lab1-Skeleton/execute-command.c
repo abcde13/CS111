@@ -59,7 +59,7 @@ print_dependency_matrix ()
 	
 
 void
-execute_command (command_t c, int time_travel)
+execute_command (command_t c, int time_travel,command_stream_t cs, int size)
 {
   /*	FIXME: Replace this with your implementation.  You may need to
      	add auxiliary functions and otherwise modify the source code.

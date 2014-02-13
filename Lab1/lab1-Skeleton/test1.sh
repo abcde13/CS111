@@ -1,3 +1,1 @@
-ls | sort -r > pipe.txt
-pwd && ls -a > sample.txt
-echo Finished
+(sleep 3; echo fail);(sleep 2 echo not)

@@ -514,9 +514,9 @@ void push(command_t * cmd, int and){
 			syntaxError(lineCounter);
 			return;
 		}
-			
+		printf("CHECKING");			
 		if(place != 0 && (*cmd)->type == SEQUENCE_COMMAND){
-			while(place != 0){
+			while(place != 0 && (operators[place])->type != START_SUBSHELL_COMMAND){
 				if(oplace > 1){
 					//printf("HIT SEMICOLON, TREE \n");
 					createTree(&(operators[place-1]), &(operands[oplace-1]),&(operands[oplace-2]));
