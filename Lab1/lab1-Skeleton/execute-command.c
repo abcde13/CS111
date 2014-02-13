@@ -41,8 +41,6 @@ void locate_dependencies (char * file, int thread_id);
 int analyze_subtree (char * file, command_t cmd);
 
 int num_threads = 0;
-// int dep_threads = 0;
-pthread_mutex_t num_threads_lock = PTHREAD_MUTEX_INITIALIZER;
 
 int dependency_table[10000][10000];
 
@@ -93,6 +91,7 @@ execute_command (command_t c, int time_travel)
 	num_threads = num_sequence_commands(c)+1;
 	if(time_travel){
 		int i,j,k;
+		index_counter = 0;
 		for (i = 0; i < num_threads; i++)
 		{
 			for(j = 0; j < num_threads; j++)
@@ -162,6 +161,8 @@ execute_command (command_t c, int time_travel)
 	{
 		do_command(c);
 	}
+//	num_threads = 0;
+//	index_counter = 0;
 }
 
 void
