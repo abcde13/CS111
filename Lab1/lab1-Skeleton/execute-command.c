@@ -56,18 +56,35 @@ print_dependency_matrix ()
 		printf("\n");
 	}
 }
+
+int 
+num_sequence_commands(command_t c)
+{
+	if(c->type != SEQUENCE_COMMAND) {
+		return 0;
+	}
+	else
+	{
+		return (1+num_sequence_commands(c->u.command[0])+num_sequence_commands(c->u.command[1]));
+	}
+}
 	
 
 void
-execute_command (command_t c, int time_travel,command_stream_t cs, int size)
+execute_command (command_t c, int time_travel, command_stream_t cs)
 {
   /*	FIXME: Replace this with your implementation.  You may need to
      	add auxiliary functions and otherwise modify the source code.
     	You can also use external functions defined in the GNU C Library.  */
 	
 
+	int nums = num_sequence_commands(c);
+	printf("%i\n",nums);
+	
 	if(time_travel){
 		int i,j;
+		int nums = num_sequence_commands(c);
+		printf("%i\n",nums);
 		for (i = 0; i < 1000; i++)
 		{
 			for(j = 0; j < 1000; j++)
@@ -241,7 +258,6 @@ execute_pipe_operator (command_t c)
 void
 execute_sequence_operator (command_t c)
 {
-	// IMPLEMENT
 	do_command(c->u.command[0]);
 	do_command(c->u.command[1]);
 	c->status = c->u.command[1]->status;
