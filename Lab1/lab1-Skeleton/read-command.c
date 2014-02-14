@@ -23,7 +23,7 @@ int addedLast = 0;
 int parenFlag = 0;
 int anyflag = 0;
 int lineCounter = 1;
-int size = 1; 
+int size = 24; 
 
 struct command_stream
 {
@@ -77,7 +77,7 @@ make_command_stream (int (*get_next_byte) (void *),
     operands =  malloc(sizeof(command_t*) * size);
     
     while(1){
-	printf("%c CHARACTER \n",c);
+	//printf("%c CHARACTER \n",c);
 	while((wordcount * sizeof(char *))>=( size * sizeof(char *))){
 		size += 1;
 		char ** temp = realloc(words,sizeof(char) * size);
@@ -89,7 +89,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			char * temp = realloc(words[i],sizeof(char)*size);
 			words[i] = temp;
 		    }
-		printf("CHODES %i \n",size);
+		//printf("CHODES %i \n",size);
 		//words = realloc(words,sizeof(char *) * size);
 	}
 	if(c==EOF){
@@ -163,7 +163,7 @@ make_command_stream (int (*get_next_byte) (void *),
 			anyflag = 0;
 			wordFlag = 0;
 			if(buff[0] != '\0'){
-//				printf("character: %c \n", buff[buffcount]);
+//				//printf("character: %c \n", buff[buffcount]);
 				char * temp = realloc(words[wordcount],sizeof(char)*buffcount);
 				words[wordcount] = temp;
 				words[wordcount] = buff;
@@ -364,23 +364,23 @@ make_command_stream (int (*get_next_byte) (void *),
 					if(temp != NULL) {
 						buff = temp;
 					}
-					printf("CHODEA %i\n",size);
+					//printf("CHODEA %i\n",size);
 				}
 			        buff[buffcount] = c;
 				buffcount++;
 				wordFlag = 1;
 			} else {
-				printf("INCREASING \n");
+				//printf("INCREASING \n");
 				while(buffcount >= size-1){
-					printf("CHODEB \n");
+					//printf("CHODEB \n");
 					size = size + 1;
 					char * temp = realloc(buff,sizeof(char) * size);
 					if(temp != NULL) {
 						buff = temp;
 					} else {
-						printf("FUCK ME,RIGHT ?\n");
+						//printf("FUCK ME,RIGHT ?\n");
 					}
-					printf("%i \n",size);
+					//printf("%i \n",size);
 				}
 			        buff[buffcount] = c;
 				buffcount++;
@@ -450,22 +450,22 @@ make_command_stream (int (*get_next_byte) (void *),
 		i++;
 	}*/
 	//print_command(oper
-	/*free(buff);
-	int i =0;
+	free(buff);
+	i =0;
 	for (i = 0; i < wordcount; i++){
 		free(words[i]);
 	}
-	free(words);*/
+	free(words);
 
 	i = 0;
-	printf("DONE WITH THE FUCKIGN TREE of size: %i %i \n",cs->size,wordcount);
+	//printf("DONE WITH THE FUCKIGN TREE of size: %i %i \n",cs->size,wordcount);
 	for(; words[i] !='\0' ; i++){
 		int j =0;
-		printf("PRINTING FAGGS");
+		//printf("PRINTING FAGGS");
 		for(; words[i][j] != '\0'; j++){
-			printf("%c",words[i][j]);
+			//printf("%c",words[i][j]);
 		}
-		printf("\n");
+		//printf("\n");
 	}
 	//cs->size--;
 	/*printf("%i %i \n",cs->size,size);
@@ -479,7 +479,7 @@ command_t
 read_command_stream (command_stream_t s)
 {
 	
-  printf("%i \n", s->index);
+  //printf("%i \n", s->index);
   command_t b = s->forest_pointer[s->index];
   s->index++;
   if(s->index >= s->size+1){
@@ -500,6 +500,10 @@ void add_to_stack(int constant, char ** word, int length){
 		cmd->type = SIMPLE_COMMAND;
 		cmd->u.word = malloc(sizeof(char*)*length);
 		cmd->u.word = word;
+		/*int i = 0;
+		for(; word[i] != NULL; i++){
+			printf("%s BRO \n",cmd->u.word[i]);
+		}*/	
 		command_t * k = &cmd; push(k,1); //printf("\n");
 	} else {
 		if(constant == AND_OPERATOR){
@@ -564,7 +568,7 @@ void push(command_t * cmd, int and){
 			if(temp != NULL) {
 				operands = temp;
 			}
-			printf("CHODET %i\n",size);
+			//printf("CHODET %i\n",size);
 		}
 	} else {
 		while(place >= size){
@@ -573,7 +577,7 @@ void push(command_t * cmd, int and){
 			if(temp != NULL) {
 				operators = temp;
 			}
-			printf("CHODED %i\n",size);
+			//printf("CHODED %i\n",size);
 		}
 	}
 	//printf("%p and type %d \n", *cmd, (*cmd)->type);
@@ -690,7 +694,7 @@ void push(command_t * cmd, int and){
 						cs->forest_pointer = temp;
 					}
 				}
-				printf("CHODEX %i\n",size);
+				//printf("CHODEX %i\n",size);
 				cs->forest_pointer[cs->size] = operands[oplace-1];
 				cs->size++;
 				pop(1);
@@ -762,7 +766,7 @@ void push(command_t * cmd, int and){
 						cs->forest_pointer = temp;
 					}
 				}
-				printf("CHODEF %i\n",size);
+				//printf("CHODEF %i\n",size);
 				cs->forest_pointer[cs->size] = operands[oplace-1];
 				cs->size++;
 				pop(1);

@@ -42,7 +42,18 @@ combine said members with operands before adding the new operator to the stack.
 The order of precedence was: ( > </> > | > &&/|| > ;/\n > ).
 
 The bulk of our error handling was taken care of in the stack discipline. When
-an operator of equal or lower precedence than the operator on top was about to be added to the stack, all commands >= the precedence of the incoming command were popped off first. For every operator popped off the stack, two operands were popped off the operand stack and set as the left and the right child of the operator. Naturally, if at any point an insufficient number of operands was present, our code determined that a syntax error had been made. It was rather nice to let the stack handle most of the error checking rather than trying to nitpick all of the various errors ourselves. All we did was instead the design the criteria for pushing and popping and let the rest work itself out. Our popping function also was merely just shuffling a few pointers around. Whenever a subcommand was created, the newly created subtree was pushed onto the operand stack and the cycle repeated. 
+an operator of equal or lower precedence than the operator on top was about to
+be added to the stack, all commands >= the precedence of the incoming command
+were popped off first. For every operator popped off the stack, two operands
+were popped off the operand stack and set as the left and the right child of the
+operator. Naturally, if at any point an insufficient number of operands was
+present, our code determined that a syntax error had been made. It was rather
+nice to let the stack handle most of the error checking rather than trying to
+nitpick all of the various errors ourselves. All we did was instead the design
+the criteria for pushing and popping and let the rest work itself out. Our
+popping function also was merely just shuffling a few pointers around. Whenever
+a subcommand was created, the newly created subtree was pushed onto the operand
+stack and the cycle repeated. 
 
 When the operator stack was emptied (end of a full command), the resulting tree
 in the first position of the operating stack was then added to the forest of
@@ -55,4 +66,28 @@ case here and there that the spec did not say how to handle (might I say that
 the spec was really vague and shitty), but we have covered most of what we
 thought had to be covered, including this report. With that, we would like to
 thank you for taking the effort to read this entire report and wish you a
-wonderful rest of the day. Good day, good sir/ma'am. 
+wonderful rest of the day. Good day, good sir/ma'am.
+
+....that is until you had to read the continuation of the wonderful schpeel with
+the new info on part b and c. Part b was pretty straightforward - our code more
+or less mirrors what the TA's instructed us to do in class. It honestly is not
+very exciting. 
+
+Part c was a royal pain in the butt. Our code operates by initially going
+through the command stream using several recursive calls in order to construct a
+matrix that contains all the dependencies between different simple commands in
+the tree being observed. Marking a 0 for all independent relationships and a 1
+for all dependent relationships, our code then parallelized all the threads that
+could be run and then ran them all. When the first batch of threads finished
+running, all dependencies on those threads were cleared from the table and the
+next batch of threads were prepared. In addition, a completed thread was marked
+with a -1 so that repeats would not occur. There is a notable difference in
+performance, indicating that our all-nighter was not for naught. Not entirely
+sure if we are taking care of all memory leaks, but I cant definitely count a
+free for every malloc. It thus should be ok in theory.
+
+Overall, this project was a miserable experience. I never want to do something
+like this again. The difficulty was intellectually stimulating and challenging,
+but the vagueness of the spec made this project a living nightmare. I hope
+someone tells Paul Eggert to write better specs someday....really....they are
+just awful. 

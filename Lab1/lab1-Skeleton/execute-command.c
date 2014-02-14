@@ -18,25 +18,30 @@
 /* FIXME: You may need to add #include directives, macro definitions,
    static function definitions, etc.  */
 
+struct arg_struct
+{
+	command_t cmd;
+	int thread_index;
+};
+
 void do_command (command_t c);
 void do_thread (void* c);
 void print_dependency_matrix ();
-int runnable (pthread_t thread);
+int runnable (int thread_id);
 void execute_and_operator (command_t c);
 void execute_or_operator (command_t c);
 void execute_pipe_operator (command_t c);
 void execute_sequence_operator (command_t c);
 void execute_simple_command (command_t c);
 void execute_subshell_command (command_t c);
-void rmv_dependencies (pthread_t thread);
-void add_dependencies (char * word, int this_index);
+void rmv_dependencies (int finished_thread_id);
 void find_threads (command_t cmd);
 void extract_dependencies (command_t cmd, int thread_id);
 void locate_dependencies (char * file, int thread_id);
 int analyze_subtree (char * file, command_t cmd);
+void cleanup();
 
 int num_threads = 0;
-pthread_mutex_t num_threads_lock = PTHREAD_MUTEX_INITIALIZER;
 
 int dependency_table[10000][10000];
 
@@ -77,7 +82,7 @@ num_sequence_commands(command_t c)
 	
 
 void
-execute_command (command_t c, int time_travel, command_stream_t cs)
+execute_command (command_t c, int time_travel)
 {
   /*	FIXME: Replace this with your implementation.  You may need to
      	add auxiliary functions and otherwise modify the source code.
@@ -87,6 +92,7 @@ execute_command (command_t c, int time_travel, command_stream_t cs)
 	num_threads = num_sequence_commands(c)+1;
 	if(time_travel){
 		int i,j,k;
+		index_counter = 0;
 		for (i = 0; i < num_threads; i++)
 		{
 			for(j = 0; j < num_threads; j++)
@@ -97,28 +103,69 @@ execute_command (command_t c, int time_travel, command_stream_t cs)
 		find_threads(c);
 		for (k = 0; k < index_counter; k++)
 		{
-	//		printf("%i\n",k);
 			extract_dependencies(pthread_list[k], k);
 		}
-		print_dependency_matrix();
-//		pthread_t tid;
-//		int status = pthread_create(&tid, NULL, (void *) &do_thread, c);
-/*		if(!status)
-		{
-			add_dependencies(c,tid);
-			print_dependency_matrix();	
+		//print_dependency_matrix();	
+		int * ind_commands = malloc(index_counter*sizeof(int));
+		int num_threads_left = index_counter;
+		while (num_threads_left > 0) {
+			int runnable_threads = 0;
+			
+//			print_dependency_matrix();				
+			for (k = 0; k < index_counter; k++)
+			{
+				if(runnable(k))
+				{
+					ind_commands[runnable_threads] = k;
+					dependency_table[k][k] = -1;
+					runnable_threads++;
+					num_threads_left--;
+				}
+			}
+//			print_dependency_matrix();				
+			pthread_t * threads = malloc(runnable_threads*sizeof(pthread_t));
+			struct arg_struct* args = malloc(runnable_threads*sizeof(struct arg_struct));
+
+			for(k = 0; k < runnable_threads; k++)
+			{
+				args[k].thread_index = k;
+				args[k].cmd = pthread_list[ind_commands[k]]; 
+			}
+//			print_dependency_matrix();
+			for(k = 0; k < runnable_threads; k++)
+			{
+				pthread_create(&threads[k],NULL, (void*) &do_thread, (void*)&args[k]);
+			}
+			//print_dependency_matrix();			
+			for (k = 0; k < runnable_threads; k++)
+			{
+				pthread_join(threads[k],NULL);
+			}
+//			print_dependency_matrix();
+			for (k = 0; k < runnable_threads; k++)
+			{
+				int column = ind_commands[k];
+
+				for(j = 0; j < index_counter; j++)
+				{
+					if(dependency_table[j][column] == 1)
+					{
+						dependency_table[j][column] = 0;
+					}
+				}
+				//print_dependency_matrix(); 
+			}
+		//	print_dependency_matrix();
+			free(threads);
+			free(args);
 		}
-*/	} 
+	} 
 	else	
 	{
 		do_command(c);
 	}
-}
-
-int
-runnable (pthread_t thread)
-{
-	return 1;	
+//	num_threads = 0;
+//	index_counter = 0;
 }
 
 void
@@ -147,6 +194,7 @@ analyze_subtree (char * file, command_t cmd)
 		{
 			if(strcmp(cmd->input,file) == 0)
 			{
+				//dep_threads++;
 				return 1;	
 			}
 		}
@@ -206,29 +254,37 @@ extract_dependencies (command_t cmd, int thread_id)
 }
 
 void
-rmv_dependencies (pthread_t thread)
+rmv_dependencies (int finished_thread_id)
 {
-}
-
-void
-add_dependencies (char * word, int this_index)
-{
-		
-}
-
-void
-do_thread ( void* c)
-{
-	c = (command_t) c;
-	while(!runnable(pthread_self()))
+/*	int i = 0;
+	for(; i < index_counter; i++)
 	{
-		pthread_yield();
+		if(dependency_table[i][finished_thread_id] == 1)
+			dep_threads--;
+		dependency_table[i][finished_thread_id] = 0;
+//		print_dependency_matrix();
 	}
-	do_command(c);
-	num_threads--;
-	rmv_dependencies(pthread_self());
+	dependency_table[finished_thread_id][finished_thread_id] = -1;*/
+}
+
+int
+runnable (int thread_id)
+{
+	int i = 0;
+	for(; i < index_counter; i++)
+	{
+		if(dependency_table[thread_id][i] == 1 || dependency_table[thread_id][i] == -1)
+			return 0;
+	}
+	return 1;	
+}
+
+void
+do_thread (void* c)
+{
+	struct arg_struct * args = (struct arg_struct *)c;
+	execute_command(args->cmd,0);
 //	free(c);
-	pthread_exit(0);	
 }
 
 void
@@ -405,4 +461,16 @@ execute_subshell_command (command_t c)
 {
 	do_command(c->u.subshell_command);
 	c->status = c->u.subshell_command->status;	// IMPLEMENT
+}
+
+void 
+cleanup()
+{
+//	int i;
+//	for(i = 0; i < 10000; i++)
+//	{
+//		free(dependency_table[i]);
+//	}
+//	free(dependency_table);
+//	free(pthread_list);
 }
