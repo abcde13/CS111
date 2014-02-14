@@ -23,7 +23,7 @@ int addedLast = 0;
 int parenFlag = 0;
 int anyflag = 0;
 int lineCounter = 1;
-int size = 24; 
+int size = 100; 
 
 struct command_stream
 {
