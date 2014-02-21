@@ -172,8 +172,8 @@ void addToTicketList(struct ticket_list** list, unsigned ticket) {
 	struct ticket_node* new_node;
 	if (*list == NULL) {
 		*list = kzalloc(sizeof(struct ticket_list), GFP_KERNEL);
-		(*list)->head = NULL;
 		(*list)->size = 0;
+		(*list)->head = NULL;
 	}
 	new_node = kzalloc(sizeof(struct ticket_node), GFP_KERNEL);
 	new_node->ticket = ticket;
@@ -203,8 +203,8 @@ void removeFromTicketList(struct ticket_list** list, unsigned ticket) {
 	}
 	if (curr->ticket == ticket) {
 		(*list)->head = curr->next_ticket;
-		kfree(curr);
 		(*list)->size--;	
+		kfree(curr);
 	}
 	while (curr->next_ticket != NULL) {	
 		if (curr->next_ticket->ticket == ticket) {
@@ -256,7 +256,7 @@ static osprd_info_t *file2osprd(struct file *filp);
 void checkLocks(struct file *filep, osprd_info_t *d) {
 	osprd_info_t *otherDisk;
 	if((otherDisk=file2osprd(filep))!=NULL){
-		if(pidInList(otherDisk->readLockingPids, current->pid) ||pidInList(otherDisk->writeLockingPids,current->pid)){
+		if(pidInList(otherDisk->writeLockingPids,current->pid)||pidInList(otherDisk->readLockingPids, current->pid)){
 			d->holdOtherLocks = 1;
 			return;
 		}
