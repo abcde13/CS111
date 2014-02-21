@@ -553,10 +553,8 @@ int osprd_ioctl(struct inode *inode, struct file *filp,
 		// Otherwise, if we can grant the lock request, return 0.
 
 		// Your code here (instead of the next two lines).
-		/*osp_spin_lock(&(d->mutex));
-		myTicket = d->ticket_head;
-		d->ticket_head++;
 		if(filp_writable){
+			osp_spin_lock(&(d->mutex));
 
 			if(pidInList(d->readLockingPids,current->pid)){
 				osp_spin_unlock(&(d->mutex));
@@ -574,76 +572,42 @@ int osprd_ioctl(struct inode *inode, struct file *filp,
 				osp_spin_unlock(&(d->mutex));
 				return -EINVAL;
 			}
-			if (d->ticket_tail==myTicket && d->writeLockingPids == NULL && d->readLockingPids == NULL) {
-				if (d->ticket_tail == myTicket) {
-					grantTicketToNextAliveProcessInOrder(d);
-				}
-				else { 
-					addToTicketList(&(d->exitedTickets), myTicket);
-				}
-
-				return -EBUSY;
+			if (d->writeLockingPids == NULL && d->readLockingPids == NULL) {
+				filp->f_flags |= F_OSPRD_LOCKED;
+				addToPidList(&(d->readLockingPids), current->pid);
+				osp_spin_unlock(&(d->mutex));
+				return 0;
 			}
-			osp_spin_lock(&(d->mutex));
-
-			filp->f_flags |= F_OSPRD_LOCKED;
-			addToPidList(&(d->readLockingPids), current->pid);
-
-			grantTicketToNextAliveProcessInOrder(d);
-
 			osp_spin_unlock(&(d->mutex));
-			wake_up_all(&(d->blockq)); 
-			return 0;
+			return -EBUSY;
 			
-		}*//*else {
+		}else {
 			osp_spin_lock(&(d->mutex));
-			myTicket = d->ticket_head;
-			d->ticket_head++;
 
-			if (pidInList(d->writeLockingPids, current->pid)) {
+			if(pidInList(d->writeLockingPids,current->pid)){
 				osp_spin_unlock(&(d->mutex));
 				return -EBUSY;
 			}
-
-			for_each_open_file(current, checkLocks, d);
-			if (d->holdOtherLocks) {
-				d->holdOtherLocks = 0;
+			for_each_open_file(current,checkLocks,d);
+		
+			if(d->holdOtherLocks){
+				d->holdOtherLocks=0;
 				osp_spin_unlock(&(d->mutex));
 				return -EBUSY;
 			}
-
 			
-			
-			if (pidInList(d->readLockingPids, current->pid)) {
+			if (d->writeLockingPids == NULL) {
+				filp->f_flags |= F_OSPRD_LOCKED;
+				addToPidList(&(d->readLockingPids), current->pid);
 				osp_spin_unlock(&(d->mutex));
-				return -EINVAL;
+				return 0;
 			}
-
-			if (wait_event_interruptible(d->blockq, d->ticket_tail==myTicket && d->writeLockingPids == NULL)) {
-				if (d->ticket_tail == myTicket) {
-					grantTicketToNextAliveProcessInOrder(d);
-				}
-				else { 
-					addToTicketList(&(d->exitedTickets), myTicket);
-				}
-
-				return -ERESTARTSYS;
-			}
-
-			osp_spin_lock(&(d->mutex));
-
-			filp->f_flags |= F_OSPRD_LOCKED;
-			addToPidList(&(d->readLockingPids), current->pid);
-
-			grantTicketToNextAliveProcessInOrder(d);
-
 			osp_spin_unlock(&(d->mutex));
-			wake_up_all(&(d->blockq)); 
-			return 0;
-		}*/
+			return -EBUSY;
+		}
 
-		eprintk("Attempting to try acquire\n");
-		r = -ENOTTY;
+		//eprintk("Attempting to try acquire\n");
+		//r = -ENOTTY;
 
 	} else if (cmd == OSPRDIOCRELEASE) {
 
