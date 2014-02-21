@@ -553,10 +553,10 @@ int osprd_ioctl(struct inode *inode, struct file *filp,
 		// Otherwise, if we can grant the lock request, return 0.
 
 		// Your code here (instead of the next two lines).
-		/*if(filp_writable){
-			osp_spin_lock(&(d->mutex));
-			myTicket = d->ticket_head;
-			d->ticket_head++;
+		/*osp_spin_lock(&(d->mutex));
+		myTicket = d->ticket_head;
+		d->ticket_head++;
+		if(filp_writable){
 
 			if(pidInList(d->readLockingPids,current->pid)){
 				osp_spin_unlock(&(d->mutex));
@@ -574,8 +574,28 @@ int osprd_ioctl(struct inode *inode, struct file *filp,
 				osp_spin_unlock(&(d->mutex));
 				return -EINVAL;
 			}
+			if (d->ticket_tail==myTicket && d->writeLockingPids == NULL && d->readLockingPids == NULL) {
+				if (d->ticket_tail == myTicket) {
+					grantTicketToNextAliveProcessInOrder(d);
+				}
+				else { 
+					addToTicketList(&(d->exitedTickets), myTicket);
+				}
+
+				return -EBUSY;
+			}
+			osp_spin_lock(&(d->mutex));
+
+			filp->f_flags |= F_OSPRD_LOCKED;
+			addToPidList(&(d->readLockingPids), current->pid);
+
+			grantTicketToNextAliveProcessInOrder(d);
+
+			osp_spin_unlock(&(d->mutex));
+			wake_up_all(&(d->blockq)); 
+			return 0;
 			
-		}else {
+		}*//*else {
 			osp_spin_lock(&(d->mutex));
 			myTicket = d->ticket_head;
 			d->ticket_head++;
@@ -599,7 +619,16 @@ int osprd_ioctl(struct inode *inode, struct file *filp,
 				return -EINVAL;
 			}
 
-			osp_spin_unlock(&(d->mutex)); 
+			if (wait_event_interruptible(d->blockq, d->ticket_tail==myTicket && d->writeLockingPids == NULL)) {
+				if (d->ticket_tail == myTicket) {
+					grantTicketToNextAliveProcessInOrder(d);
+				}
+				else { 
+					addToTicketList(&(d->exitedTickets), myTicket);
+				}
+
+				return -ERESTARTSYS;
+			}
 
 			osp_spin_lock(&(d->mutex));
 
@@ -611,9 +640,9 @@ int osprd_ioctl(struct inode *inode, struct file *filp,
 			osp_spin_unlock(&(d->mutex));
 			wake_up_all(&(d->blockq)); 
 			return 0;
-		}
+		}*/
 
-		eprintk("Attempting to try acquire\n");*/
+		eprintk("Attempting to try acquire\n");
 		r = -ENOTTY;
 
 	} else if (cmd == OSPRDIOCRELEASE) {
