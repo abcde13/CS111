@@ -364,6 +364,7 @@ static int osprd_close_last(struct inode *inode, struct file *filp)
 
 		osp_spin_unlock(&(d->mutex));
 		wake_up_all(&(d->blockq));
+		return 0;
 
 	}
 
@@ -553,8 +554,8 @@ int osprd_ioctl(struct inode *inode, struct file *filp,
 		// Otherwise, if we can grant the lock request, return 0.
 
 		// Your code here (instead of the next two lines).
+		osp_spin_lock(&(d->mutex));
 		if(filp_writable){
-			osp_spin_lock(&(d->mutex));
 
 			if(pidInList(d->readLockingPids,current->pid)){
 				osp_spin_unlock(&(d->mutex));
@@ -582,7 +583,6 @@ int osprd_ioctl(struct inode *inode, struct file *filp,
 			return -EBUSY;
 			
 		}else {
-			osp_spin_lock(&(d->mutex));
 
 			if(pidInList(d->writeLockingPids,current->pid)){
 				osp_spin_unlock(&(d->mutex));
@@ -619,8 +619,45 @@ int osprd_ioctl(struct inode *inode, struct file *filp,
 		// you need, and return 0.
 
 		// Your code here (instead of the next line).
+		if (filp) {
+			osprd_info_t *d = file2osprd(filp);
+			//int filp_writable = filp->f_mode & FMODE_WRITE;
 
-		r = -ENOTTY;
+			// EXERCISE: If the user closes a ramdisk file that holds
+			// a lock, release the lock.  Also wake up blocked processes
+			// as appropriate.
+
+			// Your code here.
+			if (d == NULL) {
+				return 1;
+			}
+
+			osp_spin_lock(&(d->mutex));
+
+			if (!pidInList(d->writeLockingPids, current->pid) && !(pidInList(d->readLockingPids, current->pid))) {
+				osp_spin_unlock(&(d->mutex));
+				return -EINVAL;
+			}
+
+			if (pidInList(d->writeLockingPids, current->pid)) {
+				removeFromPidList(&d->writeLockingPids, current->pid);	
+			}
+
+			if (pidInList(d->readLockingPids, current->pid)) {
+				removeFromPidList(&d->readLockingPids, current->pid);
+			}
+
+			if (d->readLockingPids == NULL && d->writeLockingPids == NULL) {
+				filp->f_flags &= !F_OSPRD_LOCKED;
+			}
+
+			osp_spin_unlock(&(d->mutex));
+			wake_up_all(&(d->blockq));
+			return 0;
+
+		}
+
+		//r = -ENOTTY;
 
 	} else
 		r = -ENOTTY; /* unknown command */
