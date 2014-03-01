@@ -909,8 +909,8 @@ ospfs_read(struct file *filp, char __user *buffer, size_t count, loff_t *f_pos)
 		// Use variable 'n' to track number of bytes moved.
 		/* EXERCISE: Your code here */
 		
-		retval = -EIO; // Replace these lines
-		goto done;
+	//	retval = -EIO; // Replace these lines
+	//	goto done;
 
 		data_offset = *f_pos % OSPFS_BLKSIZE;
 		n = OSPFS_BLKSIZE - data_offset;
@@ -957,10 +957,10 @@ ospfs_write(struct file *filp, const char __user *buffer, size_t count, loff_t *
 	// Support files opened with the O_APPEND flag.  To detect O_APPEND,
 	// use struct file's f_flags field and the O_APPEND bit.
 	/* EXERCISE: Your code here */
-	if(filp->f_flags && O_APPEND)
+/*	if(filp->f_flags && O_APPEND)
 	{
 		(*f_pos) = oi->oi_size;
-	}
+	}*/
 
 	// If the user is writing past the end of the file, change the file's
 	// size to accomodate the request.  (Use change_size().)
@@ -992,8 +992,10 @@ ospfs_write(struct file *filp, const char __user *buffer, size_t count, loff_t *
 		// read user space.
 		// Keep track of the number of bytes moved in 'n'.
 		/* EXERCISE: Your code here */
+		retval = -EIO;
+		goto done;
 		
-		data = data + (*f_pos)%OSPFS_BLKSIZE;
+		/*data = data + (*f_pos)%OSPFS_BLKSIZE;
 		n = OSPFS_BLKSIZE - (*f_pos)%OSPFS_BLKSIZE;
 	
 		int temp = count - amount;
@@ -1005,7 +1007,7 @@ ospfs_write(struct file *filp, const char __user *buffer, size_t count, loff_t *
 		{
 			retval = -EFAULT;
 			goto done;
-		}
+		}*/
 
 		buffer += n;
 		amount += n;
@@ -1110,6 +1112,7 @@ create_blank_direntry(ospfs_inode_t *dir_oi)
 	dir_oi->oi_size = new_size;
 
 	return ospfs_inode_data(dir_oi,offset);
+	//return ERR_PTR(-EINVAL);
 }
 
 // ospfs_link(src_dentry, dir, dst_dentry
@@ -1144,7 +1147,7 @@ create_blank_direntry(ospfs_inode_t *dir_oi)
 static int
 ospfs_link(struct dentry *src_dentry, struct inode *dir, struct dentry *dst_dentry) {
 	/* EXERCISE: Your code here. */
-	ospfs_inode_t *dir_oi = ospfs_inode(dir->i_ino);
+	/*ospfs_inode_t *dir_oi = ospfs_inode(dir->i_ino);
 	ospfs_inode_t *src_oi = ospfs_inode(src_dentry->d_inode->i_ino);
 	ospfs_direntry_t *new_entry;
 	
@@ -1178,7 +1181,8 @@ ospfs_link(struct dentry *src_dentry, struct inode *dir, struct dentry *dst_dent
 	new_entry->od_name[dst_dentry->d_name.len] = '\0';
 
 	src_oi->oi_nlink++;
-	return 0;
+	return 0;*/
+	return -EINVAL;
 }
 
 // ospfs_create
@@ -1281,11 +1285,14 @@ ospfs_create(struct inode *dir, struct dentry *dentry, int mode, struct nameidat
 	/* Execute this code after your function has successfully created the
 	   file.  Set entry_ino to the created file's inode number before
 	   getting here. */
-	i = ospfs_mk_linux_inode(dir->i_sb, entry_ino);
-	if (!i)
-		return -ENOMEM;
-	d_instantiate(dentry, i);
-	return 0;
+	//return -ENOMEM;
+	{
+		i = ospfs_mk_linux_inode(dir->i_sb, entry_ino);
+		if (!i)
+			return -ENOMEM;
+		d_instantiate(dentry, i);
+		return 0;
+	}
 }
 
 
