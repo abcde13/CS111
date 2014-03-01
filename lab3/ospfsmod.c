@@ -846,13 +846,22 @@ ospfs_read(struct file *filp, char __user *buffer, size_t count, loff_t *f_pos)
 	// Change 'count' so we never read past the end of the file.
 	/* EXERCISE: Your code here */
 
+	if(*f_pos + count < *f_pos) {
+		return -EIO;
+	}
+	if(*f_pos >= oi->oi_size) {
+		count = 0;
+	} else if (*f_pos + count > oi->oi_size){
+		count = oi->oi_size - *f_pos;
+	}
+
 	// Copy the data to user block by block
 	while (amount < count && retval >= 0) {
 		uint32_t blockno = ospfs_inode_blockno(oi, *f_pos);
 		uint32_t n;
 		char *data;
 		uint32_t data_offset;
-		uint32_t bytes_left_to_copy = count_amount;
+		uint32_t bytes_left_to_copy = count-amount;
 
 		// ospfs_inode_blockno returns 0 on error
 		if (blockno == 0) {
@@ -872,7 +881,7 @@ ospfs_read(struct file *filp, char __user *buffer, size_t count, loff_t *f_pos)
 		goto done;
 
 		data_offset = *f_pos % OSPFS_BLKSIZE;
-		n = OSPFS_BLKSIZE = -data_offset;
+		n = OSPFS_BLKSIZE - data_offset;
 		if (n > bytes_left_to_copy)
 			n = bytes_left_to_copy;
 		if (copy_to_user(buffer,data + data_offset,n) > 0) {//copy to buffer
@@ -1019,7 +1028,32 @@ create_blank_direntry(ospfs_inode_t *dir_oi)
 	//    entries and return one of them.
 
 	/* EXERCISE: Your code here. */
-	return ERR_PTR(-EINVAL); // Replace this line
+	uint32_t new_size;
+	ospfs_direntry_t *od;
+	int retval = 0, offset;
+
+	if(dir_oi->oi_ftype != OSPFS_FTYPE_DIR) {
+		return ERR_PTR(-EIO);
+	}
+	for(offset=0;offset < dir_oi->oi_size; offset += OSPFS_DIRENTRY_SIZE) {
+		od = ospfs_inode_data(dir_oi,offset);
+		//if inode # = 0, then directory entry is Empty
+		if(od->od_ino == 0){
+			return od;
+		}
+	}
+
+	// If no free entries werer found, add a block
+	new_size = (ospfs_size2nblocks(dir_oi->oi_size)+1) * OSPFS_BLKSIZE;
+	retval = change_size(dir_oi, new_size);
+	
+	if(retval != 0) {
+		return ERR_PTR(retval);
+	}
+	
+	dir_oi->oi_size = new_size;
+
+	return ospfs_inode_data(dir_oi,offset);
 }
 
 // ospfs_link(src_dentry, dir, dst_dentry
