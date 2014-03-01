@@ -852,7 +852,7 @@ ospfs_read(struct file *filp, char __user *buffer, size_t count, loff_t *f_pos)
 		uint32_t n;
 		char *data;
 		uint32_t data_offset;
-		uint32_t bytes_left_to_copy = count_amount;
+		uint32_t bytes_left_to_copy = count - amount;
 
 		// ospfs_inode_blockno returns 0 on error
 		if (blockno == 0) {
@@ -872,7 +872,7 @@ ospfs_read(struct file *filp, char __user *buffer, size_t count, loff_t *f_pos)
 		goto done;
 
 		data_offset = *f_pos % OSPFS_BLKSIZE;
-		n = OSPFS_BLKSIZE = -data_offset;
+		n = OSPFS_BLKSIZE - data_offset;
 		if (n > bytes_left_to_copy)
 			n = bytes_left_to_copy;
 		if (copy_to_user(buffer,data + data_offset,n) > 0) {//copy to buffer
@@ -1086,24 +1086,82 @@ ospfs_link(struct dentry *src_dentry, struct inode *dir, struct dentry *dst_dent
 //
 //   EXERCISE: Complete this function.
 
+static inline uint32_t
+find_free_inode(void)
+{
+	uint32_t inode_no;
+	ospfs_inode_t *new_inode_loc;
+	for(inode_no = 2; inode_no < ospfs_super->os_ninodes; inode_no++)
+	{
+		new_inode_loc = ospfs_inode(inode_no);
+		if(new_inode_loc->oi_nlink == 0)
+			return inode_no;
+	}
+	return 0;	
+}
+
 static int
 ospfs_create(struct inode *dir, struct dentry *dentry, int mode, struct nameidata *nd)
 {
 	ospfs_inode_t *dir_oi = ospfs_inode(dir->i_ino);
 	uint32_t entry_ino = 0;
 	/* EXERCISE: Your code here. */
-	return -EINVAL; // Replace this line
+	ospfs_inode_t *file_oi = NULL;
+	ospfs_direntry_t *new_entry = NULL;
+	uint32_t blockno = 0;
+
+	struct inode *i;
+	
+	if(dir_oi->oi_ftype != OSPFS_FTYPE_DIR)
+	{
+		return -EIO;
+	}
+	if(dentry->d_name.len > OSPFS_MAXNAMELEN)
+	{
+		return -ENAMETOOLONG;
+	}
+	if(find_direntry(dir_oi,dentry->d_name.name,dentry->d_name.len) != NULL)
+	{
+		return -EEXIST;
+	}
+
+	entry_ino = find_free_inode();
+	if(entry_ino == 0)
+	{	
+		return -ENOSPC;
+	}
+
+	file_oi = ospfs_inode(entry_ino);
+
+	if(file_oi == NULL)
+	{	
+		return -EIO; 
+	}
+
+	file_oi->oi_size = 0;
+	file_oi->oi_ftype = OSPFS_FTYPE_REG;
+	file_oi->oi_nlink = 1;
+	file_oi->oi_mode = mode;
+
+	new_entry = create_blank_direntry(dir_oi);
+
+	if(IS_ERR(new_entry))
+	{
+		return PTR_ERR(new_entry);
+	}
+
+	new_entry->od_ino = entry_ino;
+	memcpy(new_entry->od_name,dentry->d_name.name,dentry->d_name.len);
+	new_entry->od_name[dentry->d_name.len] = '\0';
 
 	/* Execute this code after your function has successfully created the
 	   file.  Set entry_ino to the created file's inode number before
 	   getting here. */
-	{
-		struct inode *i = ospfs_mk_linux_inode(dir->i_sb, entry_ino);
-		if (!i)
-			return -ENOMEM;
-		d_instantiate(dentry, i);
-		return 0;
-	}
+	i = ospfs_mk_linux_inode(dir->i_sb, entry_ino);
+	if (!i)
+		return -ENOMEM;
+	d_instantiate(dentry, i);
+	return 0;
 }
 
 
