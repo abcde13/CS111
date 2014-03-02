@@ -760,8 +760,32 @@ add_block(ospfs_inode_t *oi)
 	// keep track of allocations to free in case of -ENOSPC
 	uint32_t *allocated[2] = { 0, 0 };
 
-	/* EXERCISE: Your code here */
-	return -EIO; // Replace this line
+	//Nothing do do if this file is a symbolic link
+	if(oi->oi_ftype == OSPFS_FTYPE_SYMLINK)
+		return 0;
+
+	//IF NDRIECT (10 blocks) is goint to be exceeded, create INDIRECT
+	if(n == OSPFS_NDIRECT){
+		allocated[0] = allocate_block();
+		if(allocated[0] == 0){
+			return -ENOSPC;
+		}
+		int i = 0;
+		for(;i< OSPFS_BLKSIZE/4; i++){
+			ospfs_block(allocated[0])[i] = 0;
+		}
+	} else if(n == OSPFS_NDIRECT + OSPFS_NINDIRECT){ //ELSE check if we are in need of allocating for NINDIRECT2
+		allocated[1] = allocate_block();
+		if(allocated[1] == 0){
+			return -ENOSPC;
+		}
+		int i = 0;
+		for(;i< OSPFS_BLKSIZE/4; i++){
+			ospfs_block(allocated[1])[i] = 0;
+		}
+	}
+	//other
+	
 }
 
 
