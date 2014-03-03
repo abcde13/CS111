@@ -447,13 +447,17 @@ ospfs_dir_readdir(struct file *filp, void *dirent, filldir_t filldir)
 	while (r == 0 && ok_so_far >= 0 && f_pos >= 2) {
 		ospfs_direntry_t *od;
 		ospfs_inode_t *entry_oi;
+		uint32_t size_bytes = dir_oi->oi_size * OSPFS_DIRENTRY_SIZE;
 
 		/* If at the end of the directory, set 'r' to 1 and exit
 		 * the loop.  For now we do this all the time.
 		 *
 		 * EXERCISE: Your code here */
-//		r = 1;		/* Fix me! */
-//		break;		/* Fix me! */
+		if((f_pos-2) >= size_bytes)
+		{
+			r = 1;		
+			break;
+		}
 
 		/* Get a pointer to the next entry (od) in the directory.
 		 * The file system interprets the contents of a
@@ -493,21 +497,13 @@ ospfs_dir_readdir(struct file *filp, void *dirent, filldir_t filldir)
 					filetype = DT_LNK;
 					break;
 				default:
+					r = 1;
 					break;
 			}
-			if(filldir(dirent,od->od_name,strlen(od->od_name),f_pos,od->od_ino,filetype) >= 0)
-			{
-				f_pos++;
-			}
-		}
-		else 
-		{ 
-			f_pos++; 
-		}
-		if(f_pos >= dir_oi->oi_size / OSPFS_DIRENTRY_SIZE)
-		{
-			r = 1;
-		}
+
+			ok_so_far = filldir(dirent,od->od_name,strlen(od->od_name),f_pos,od->od_ino,filetype);
+		} 
+		f_pos++; 
 	}
 
 	// Save the file position and return!
@@ -585,6 +581,20 @@ static uint32_t
 allocate_block(void)
 {
 	/* EXERCISE: Your code here */
+	uint32_t n_blocks = ospfs_super->os_nblocks;
+	uint32_t curr_block = 0;
+	
+	void* bitmap_blocking_start = ospfs_block(OSPFS_FREEMAP_BLK);
+	
+	while(curr_block < n_blocks)
+	{
+		if(bitvector_test(bitmap_blocking_start,curr_block))
+		{
+			bitvector_clear(bitmap_blocking_start,curr_block);
+			return curr_block;
+		}
+		curr_block++;
+	}
 	return 0;
 }
 
@@ -604,6 +614,14 @@ static void
 free_block(uint32_t blockno)
 {
 	/* EXERCISE: Your code here */
+	uint32_t n_blocks = ospfs_super->os_nblocks;
+	uint32_t valid_free = 2*(ospfs_super->os_firstinob) + ospfs_super->os_ninodes/OSPFS_BLKINODES;
+
+	if(blockno > valid_free)
+	{
+		void* bitmap_block = ospfs_block(OSPFS_FREEMAP_BLK + blockno/OSPFS_BLKBITSIZE);
+		bitvector_set(bitmap_block, blockno%OSPFS_BLKBITSIZE);
+	}
 }
 
 
@@ -640,6 +658,10 @@ static int32_t
 indir2_index(uint32_t b)
 {
 	// Your code here.
+	if(b >= OSPFS_NDIRECT + OSPFS_NINDIRECT)
+	{
+		return 0;
+	}
 	return -1;
 }
 
@@ -658,8 +680,17 @@ indir2_index(uint32_t b)
 static int32_t
 indir_index(uint32_t b)
 {
-	// Your code here.
-	return -1;
+	if(b >= OSPFS_NDIRECT + OSPFS_NINDIRECT)
+	{
+		uint32_t blockoff = b - (OSPFS_NDIRECT + OSPFS_NINDIRECT);
+   		 return blockoff / OSPFS_NINDIRECT;
+  	} 
+  	else if (b >= OSPFS_NDIRECT) 
+  	{
+    		return 0;
+  	}
+  	else
+		return -1;
 }
 
 
@@ -675,8 +706,17 @@ indir_index(uint32_t b)
 static int32_t
 direct_index(uint32_t b)
 {
-	// Your code here.
-	return -1;
+	if (b >= OSPFS_NDIRECT + OSPFS_NINDIRECT)  
+  	{
+    		uint32_t blockoff = b - (OSPFS_NDIRECT + OSPFS_NINDIRECT);
+    		return blockoff % OSPFS_NINDIRECT;
+  	} 
+  	else if (b >= OSPFS_NDIRECT)
+ 	 {
+    		return (b - OSPFS_NDIRECT);
+ 	 }
+  	else
+    		return b;	
 }
 
 
@@ -957,18 +997,18 @@ ospfs_write(struct file *filp, const char __user *buffer, size_t count, loff_t *
 	// Support files opened with the O_APPEND flag.  To detect O_APPEND,
 	// use struct file's f_flags field and the O_APPEND bit.
 	/* EXERCISE: Your code here */
-/*	if(filp->f_flags && O_APPEND)
+/*	if(filp->f_flags & O_APPEND)
 	{
-		(*f_pos) = oi->oi_size;
+		*f_pos = oi->oi_size;
 	}*/
 
 	// If the user is writing past the end of the file, change the file's
 	// size to accomodate the request.  (Use change_size().)
 	/* EXERCISE: Your code here */
-	/*if((*f_pos) + count > oi->oi_size)
+	/*if((*f_pos + count) > oi->oi_size)
 	{
-		retval = change_size(oi, (*f_pos) + count);
-		if(retval)
+		retval = change_size(oi, (*f_pos + count));
+		if(retval < 0)
 		{
 			goto done;
 		}
@@ -995,18 +1035,16 @@ ospfs_write(struct file *filp, const char __user *buffer, size_t count, loff_t *
 		retval = -EIO;
 		goto done;
 		
-		/*data = data + (*f_pos)%OSPFS_BLKSIZE;
-		n = OSPFS_BLKSIZE - (*f_pos)%OSPFS_BLKSIZE;
+		/*n = OSPFS_BLKSIZE - (*f_pos%OSPFS_BLKSIZE);
 	
 		int temp = count - amount;
-		if(n > temp)
+		if((n + amount) > count)
 		{
 			n = temp; 
 		}	
-		if(copy_from_user(data,buffer,n) > 0)
+		if(copy_from_user(data,buffer,n) != 0)
 		{
 			retval = -EFAULT;
-			goto done;
 		}*/
 
 		buffer += n;
@@ -1147,7 +1185,7 @@ create_blank_direntry(ospfs_inode_t *dir_oi)
 static int
 ospfs_link(struct dentry *src_dentry, struct inode *dir, struct dentry *dst_dentry) {
 	/* EXERCISE: Your code here. */
-	/*ospfs_inode_t *dir_oi = ospfs_inode(dir->i_ino);
+	ospfs_inode_t *dir_oi = ospfs_inode(dir->i_ino);
 	ospfs_inode_t *src_oi = ospfs_inode(src_dentry->d_inode->i_ino);
 	ospfs_direntry_t *new_entry;
 	
@@ -1181,8 +1219,8 @@ ospfs_link(struct dentry *src_dentry, struct inode *dir, struct dentry *dst_dent
 	new_entry->od_name[dst_dentry->d_name.len] = '\0';
 
 	src_oi->oi_nlink++;
-	return 0;*/
-	return -EINVAL;
+	return 0;
+//	return -EINVAL;
 }
 
 // ospfs_create
