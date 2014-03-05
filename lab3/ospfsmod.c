@@ -979,19 +979,23 @@ change_size(ospfs_inode_t *oi, uint32_t new_size)
 
 	while (ospfs_size2nblocks(oi->oi_size) < ospfs_size2nblocks(new_size)) {
 		r = add_block(oi);
-		if(r<0)
-		
-	        /* EXERCISE: Your code here */
-		return -EIO; // Replace this line
+		if(r == -ENOSPC)
+			new_size = old_size;
+		else if(r == -EIO)
+			return r;	
 	}
+
 	while (ospfs_size2nblocks(oi->oi_size) > ospfs_size2nblocks(new_size)) {
-	        /* EXERCISE: Your code here */
-		return -EIO; // Replace this line
+	       	r = remove_block(oi);
+		if(r == -EIO)
+			return r;	 
 	}
 
 	/* EXERCISE: Make sure you update necessary file meta data
 	             and return the proper value. */
-	return -EIO; // Replace this line
+	if(r == 0)
+		oi->oi_size = new_size;	
+	return r; // Replace this line
 }
 
 
@@ -1137,22 +1141,23 @@ ospfs_write(struct file *filp, const char __user *buffer, size_t count, loff_t *
 	// Support files opened with the O_APPEND flag.  To detect O_APPEND,
 	// use struct file's f_flags field and the O_APPEND bit.
 	/* EXERCISE: Your code here */
-/*	if(filp->f_flags & O_APPEND)
+	if(filp->f_flags & O_APPEND)
 	{
 		*f_pos = oi->oi_size;
-	}*/
+	}
 
 	// If the user is writing past the end of the file, change the file's
 	// size to accomodate the request.  (Use change_size().)
 	/* EXERCISE: Your code here */
-	/*if((*f_pos + count) > oi->oi_size)
+	int temp;
+	if((*f_pos + count) > oi->oi_size)
 	{
-		retval = change_size(oi, (*f_pos + count));
-		if(retval < 0)
+		temp = change_size(oi, (*f_pos + count));
+		if(temp < 0)
 		{
 			goto done;
 		}
-	}*/
+	}
 
 	// Copy data block by block
 	while (amount < count && retval >= 0) {
@@ -1172,10 +1177,10 @@ ospfs_write(struct file *filp, const char __user *buffer, size_t count, loff_t *
 		// read user space.
 		// Keep track of the number of bytes moved in 'n'.
 		/* EXERCISE: Your code here */
-		retval = -EIO;
-		goto done;
+	//	retval = -EIO;
+	//	goto done;
 		
-		/*n = OSPFS_BLKSIZE - (*f_pos%OSPFS_BLKSIZE);
+		n = OSPFS_BLKSIZE - (*f_pos%OSPFS_BLKSIZE);
 	
 		int temp = count - amount;
 		if((n + amount) > count)
@@ -1185,7 +1190,7 @@ ospfs_write(struct file *filp, const char __user *buffer, size_t count, loff_t *
 		if(copy_from_user(data,buffer,n) != 0)
 		{
 			retval = -EFAULT;
-		}*/
+		}
 
 		buffer += n;
 		amount += n;
