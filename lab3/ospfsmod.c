@@ -1149,15 +1149,15 @@ ospfs_write(struct file *filp, const char __user *buffer, size_t count, loff_t *
 	// If the user is writing past the end of the file, change the file's
 	// size to accomodate the request.  (Use change_size().)
 	/* EXERCISE: Your code here */
-	int temp;
-	if((*f_pos + count) > oi->oi_size)
+	int tester;
+/*	if((*f_pos + count) > oi->oi_size)
 	{
-		temp = change_size(oi, (*f_pos + count));
-		if(temp < 0)
+		tester = change_size(oi, (*f_pos + count));
+		if(tester < 0)
 		{
 			goto done;
 		}
-	}
+	}*/
 
 	// Copy data block by block
 	while (amount < count && retval >= 0) {
@@ -1170,7 +1170,7 @@ ospfs_write(struct file *filp, const char __user *buffer, size_t count, loff_t *
 			goto done;
 		}
 
-		data = ospfs_block(blockno);
+		data = ospfs_inode_data(oi, *f_pos);
 
 		// Figure out how much data is left in this block to write.
 		// Copy data from user space. Return -EFAULT if unable to read
@@ -1186,10 +1186,12 @@ ospfs_write(struct file *filp, const char __user *buffer, size_t count, loff_t *
 		if((n + amount) > count)
 		{
 			n = temp; 
-		}	
-		if(copy_from_user(data,buffer,n) != 0)
+		}
+	
+		tester = copy_from_user(data,buffer,n); 	
+		if(tester != 0)
 		{
-			retval = -EFAULT;
+			return -EFAULT;
 		}
 
 		buffer += n;
