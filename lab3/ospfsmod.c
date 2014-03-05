@@ -759,6 +759,7 @@ add_block(ospfs_inode_t *oi)
 
 	// keep track of allocations to free in case of -ENOSPC
 	uint32_t *allocated[2] = { 0, 0 };
+	int r = 0;
 
 	//Nothing do do if this file is a symbolic link
 	if(oi->oi_ftype == OSPFS_FTYPE_SYMLINK)
@@ -771,8 +772,9 @@ add_block(ospfs_inode_t *oi)
 			return -ENOSPC;
 		}
 		int i = 0;
+		uint32_t * alloc = ospfs_block(allocated[0]); 
 		for(;i< OSPFS_BLKSIZE/4; i++){
-			ospfs_block(allocated[0])[i] = 0;
+			alloc[i] = 0;
 		}
 	} else if(n == OSPFS_NDIRECT + OSPFS_NINDIRECT){ //ELSE check if we are in need of allocating for NINDIRECT2
 		allocated[1] = allocate_block();
@@ -780,13 +782,78 @@ add_block(ospfs_inode_t *oi)
 			return -ENOSPC;
 		}
 		int i = 0;
+		uint32_t * alloc = ospfs_block(allocated[0]); 
 		for(;i< OSPFS_BLKSIZE/4; i++){
-			ospfs_block(allocated[1])[i] = 0;
+			alloc[i] = 0;
 		}
 	}
-	//other
 	
+	//Now allocate said block
+	uint32_t newblock = allocate_block();
+	
+	//If the allocation failed
+	if(newblock != 0){
+		//Now, if I allocated for the indirect^2, free that 
+		if(allocated[1] != 0){
+			free_block(allocated[1]);
+		}
+		if(allocated[0] != 0){
+			free_block(allocated[0]);
+		}
+	}
+
+	//Zeroing out new block
+	int i = 0;
+	uint32_t * newblock_array = ospfs_block(newblock);
+	for(;i< OSPFS_BLKSIZE/4; i++){
+		newblock_array[i] = 0;
+	}
+
+	if(n < OSPFS_NDIRECT){
+		oi->oi_direct[direct_index(n)] = newblock;
+	}else if (n >= OSPFS_NDIRECT && n < OSPFS_NINDIRECT){
+		if(allocated[0] != 0){
+			oi->oi_indirect = allocated[0];
+		}
+		if(oi->oi_indirect != 0){
+			uint32_t * ib = ospfs_block(oi->oi_indirect);
+			ib[direct_index(n)] = ib;
+		} else {
+			r = -EIO;
+		}
+	} else {
+		if(allocated[1] != 0){
+			oi->oi_indirect2 = allocated[0];
+		}
+		if(oi->oi_indirect2 != 0){
+			uint32_t * i2b = ospfs_block(oi->oi_indirect2);
+			if(allocated[0] != 0){
+				i2b[indir_index(n)] = allocated[0];
+			}
+			if(i2b[indir_index(n)] != 0){
+				uint32_t * ib = ospfs_block(i2b[indir_index(n)]);
+				ib[direct_index(n)] = newblock;
+			} else {
+				r = -EIO;
+			}
+		} else {
+			r = -EIO;
+		}
+
+	}
+
+	if(r != 0){
+		if(allocated[0] != 0)
+			free_block((int)allocated[0]);
+		if(allocated[1] != 0)
+			free_block((int)allocated[1]);
+		return r;
+	}
+
+	oi->oi_size = (n + 1) * OSPFS_BLKSIZE;
+	return r;
 }
+
 
 
 // remove_block(ospfs_inode_t *oi)
@@ -816,9 +883,55 @@ remove_block(ospfs_inode_t *oi)
 {
 	// current number of blocks in file
 	uint32_t n = ospfs_size2nblocks(oi->oi_size);
+	uint32_t * ib_2;
+	uint32_t * ib;
+	
+	if(n == 0){
+		return -EIO;
+	}
 
-	/* EXERCISE: Your code here */
-	return -EIO; // Replace this line
+	if(n >= OSPFS_NDIRECT + OSPFS_NINDIRECT){
+		if(oi->oi_indirect2 == 0){
+			return -EIO;
+		}
+
+		ib_2 = ospfs_block(oi->oi_indirect2);
+	
+		if(ib_2[indir_index(n-1)] == 0){
+			return -EIO;
+		}
+
+		ib = ospfs_block(ib_2[indir_index(n-1)]);
+
+		free_block(ib[direct_index(n-1)]);
+		
+		if(indir_index(n-2) < indir_index(n-1)){
+			free_block(ib_2[indir_index(n-1)]);
+			ib_2[indir_index(n-1)] = 0;
+		}
+		if (indir2_index(n-1) < 0){
+			free_block(oi->oi_indirect2);
+			oi->oi_indirect2 = 0;
+		}
+	} else if (n >= OSPFS_NDIRECT){
+		if(oi->oi_indirect == 0){
+			return -EIO;
+		}
+		
+		ib  = ospfs_block(oi->oi_indirect);
+		free_block(ib[direct_index(n-1)]);
+		ib[n-1-OSPFS_NDIRECT] = 0;
+		if((n-1-1) < OSPFS_NDIRECT){
+			free_block(oi->oi_indirect);
+			oi->oi_indirect = 0;
+		}	
+	} else {
+		free_block(oi->oi_direct[n-1]);
+		oi->oi_direct[n-1] = 0;
+	}
+		
+	oi->oi_size = (n-1) * OSPFS_BLKSIZE;
+	return 0;
 }
 
 
