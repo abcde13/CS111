@@ -452,10 +452,12 @@ make_command_stream (int (*get_next_byte) (void *),
 	//print_command(oper
 	free(buff);
 	i =0;
-	for (i = 0; i < wordcount; i++){
-		free(words[i]);
-	}
-	free(words);
+	//free(operands);
+	//free(operators);
+	//for (i = 0; i < wordcount; i++){
+	//	free(words[i]);
+	//}
+	//free(words);
 
 	i = 0;
 	return cs;

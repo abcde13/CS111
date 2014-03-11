@@ -1,0 +1,93 @@
+
+Joraaver Chahal ID: 304200975 Arjun Lakshmipathy ID: 804158733
+
+
+Our implementation consisted of first reading in the input stream set forth by
+the user in the shellscript. We determined here the basic combinations of
+characters that were to be classified as operators (&&, ||, <, etc.), while
+everything else was treated as a word. Basic syntax errors, such as starting a
+command with an operator or getting a character that was not specified as a
+word, were caught in this phase.
+
+Based on what we got from the stream, several flags were set. Some flags include
+that an or command was detected, a space being detected, a word being detected,
+whether the operand or operating stack was most recently added to, and several
+other situations that we believed were important. These flags were used to
+determine how to create and manage the generated tree.
+
+The flags set determined how to package these various inputs as commands. If the
+or flag was set, a new command was created of type OR_COMMAND, for example. More
+advanced criteria were used to determine subshells and redirects, but the basic
+idea nonetheless remains intact.
+
+The interpretation of the union struct was determined based on the the
+enumerated type. The default case was set to a word pointer, but was modified to
+an array of character pointers in the case of an operator or a subshell node
+pointer if a subshell tree was recently completed. The step, honestly, was
+pretty basic.
+
+Based on the enumerated type of the command, the command was either added to an
+"operator" stack or an "operand" stack. The operator stack is pretty
+self-explanatory, but the operand stack was composed both of simple commands as
+well as subtrees of subcommands (a subcommand referrring to a an operator
+combined with 2 operands). Every time a subcommand was created, it was
+immediately pushed onto the operand stack. 
+
+Since stacks do not exist in C, we had to create our own variations of pushing
+and popping. When pushing something onto the stack, two criteria were adhered
+to: an operand was pushed onto the operand stack immediately, while the operator
+stack push depended on the precedence of the command type coming in. Based on
+the precedence, the operator stack may have had to pop off several members and
+combine said members with operands before adding the new operator to the stack.
+The order of precedence was: ( > </> > | > &&/|| > ;/\n > ).
+
+The bulk of our error handling was taken care of in the stack discipline. When
+an operator of equal or lower precedence than the operator on top was about to
+be added to the stack, all commands >= the precedence of the incoming command
+were popped off first. For every operator popped off the stack, two operands
+were popped off the operand stack and set as the left and the right child of the
+operator. Naturally, if at any point an insufficient number of operands was
+present, our code determined that a syntax error had been made. It was rather
+nice to let the stack handle most of the error checking rather than trying to
+nitpick all of the various errors ourselves. All we did was instead the design
+the criteria for pushing and popping and let the rest work itself out. Our
+popping function also was merely just shuffling a few pointers around. Whenever
+a subcommand was created, the newly created subtree was pushed onto the operand
+stack and the cycle repeated. 
+
+When the operator stack was emptied (end of a full command), the resulting tree
+in the first position of the operating stack was then added to the forest of
+command trees. The root node (conveniently the last operator popped off the
+operator stack in every situation) was pointed to by the master forest pointer
+array, and the full series of commands is ready for interpretation. 
+
+By the way, no real bugs exist in our code anymore. There may have been a test
+case here and there that the spec did not say how to handle (might I say that
+the spec was really vague and shitty), but we have covered most of what we
+thought had to be covered, including this report. With that, we would like to
+thank you for taking the effort to read this entire report and wish you a
+wonderful rest of the day. Good day, good sir/ma'am.
+
+....that is until you had to read the continuation of the wonderful schpeel with
+the new info on part b and c. Part b was pretty straightforward - our code more
+or less mirrors what the TA's instructed us to do in class. It honestly is not
+very exciting. 
+
+Part c was a royal pain in the butt. Our code operates by initially going
+through the command stream using several recursive calls in order to construct a
+matrix that contains all the dependencies between different simple commands in
+the tree being observed. Marking a 0 for all independent relationships and a 1
+for all dependent relationships, our code then parallelized all the threads that
+could be run and then ran them all. When the first batch of threads finished
+running, all dependencies on those threads were cleared from the table and the
+next batch of threads were prepared. In addition, a completed thread was marked
+with a -1 so that repeats would not occur. There is a notable difference in
+performance, indicating that our all-nighter was not for naught. Not entirely
+sure if we are taking care of all memory leaks, but I cant definitely count a
+free for every malloc. It thus should be ok in theory.
+
+Overall, this project was a miserable experience. I never want to do something
+like this again. The difficulty was intellectually stimulating and challenging,
+but the vagueness of the spec made this project a living nightmare. I hope
+someone tells Paul Eggert to write better specs someday....really....they are
+just awful. 

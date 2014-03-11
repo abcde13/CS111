@@ -1,0 +1,44 @@
+Name: Joraaver Chahal
+UCLA ID: 304200975
+
+
+-------------------------------------------------------------------------------
+
+Response to Exercise 1:
+
+The name of the scheduling algorithm is: Round Robin, because it repeats 1234 all the way until the end, showing that each gets a bit of the CPU at a time.
+
+(Exercise 2 is a coding exercise)
+For this exercise, I merely had to start a for loop from the 1st pid every time, and when I find a runnable process, I run it. This way, 1 runs to completion, then 2, then 3, then 4, which essentially is by assigned priority.
+
+Response to Exercise 3:
+
+Average turnaround time for scheduling_algorithm 0: (320*4-3)+(320*4-2)+(320*4-1)+(320*4)/4 = 1278.5 ms. This occurs because for each process, it runs all its characters once every 3 (1234), thus, it gets to the end, - 1 for its position, before finishing.
+Average turnaround time for scheduling_algorithm 1: 320+640+960+1280/4 = 800 ms. Merely a summation of each process running to completetion.
+
+Average wait time for scheduling_algorithm 0: (0+1+2+3)/4 = 6/4 = 1.5 ms. Simply take how many characters each process has before it over the total number of processes.
+Average wait time for scheduling_algorithm 1: (0 + 320 + 2*320 + 3*320)/4 = 480 ms. Same as above.
+
+
+Exercise 4:
+
+Did you complete Exercise 4A or Exercise 4B? BOTH
+
+4A. So this is my p_priority scheduler that alternates between equal priority processes. In order to do this, I setup a variable, lrpid (last run pid) and startgoing through a for loop that starts off at the previously run pid. This way, it picks up the next pid that has a priority equal to lrpid's priority, and runs that one. If no priority is the same and lrpid is still runnable, it will run it again. Otherwise, it finds the next priority to run, and starts the process again. There is also a sys call that has been setup to set the priorities as needed.Merely calls an interrupt called PRIORITY with the priority stored in eax. Then I set the p_priority of the current pid to the passed priority.
+
+4B. In this one, I setup an int array of the proportions for each process [1,2,3,4]. Then, I do a simple check. If the process whose pid I'm currently on is runnable and the value in the proportional array at its index (pid) isn't 0, then run it and decrement the value. This way, 4 will will run 4 times as many times as 1. Of course, everytime the 4th process's value hits 0, then the array is no [0,0,0,0], so I reset it to [1,2,3,4]. Of course, the values of the array in the beginning and to reset change if a sys call is made to change their values. Same as 4A, except replace priority with proportion, as well as store a permanent array I'm using to store the values.
+
+Exercise 5: According to the repsonse shown in the spec, the first interrupt
+probably occurs on the 4th process, 15 ms into running all the processes (if we still assume each character is still 1 ms). That's because it prints 1234 consecutively until th 16th character, which is a 1 instead of a 4, making the output 1231 instead of 1234. Of course, this is only the first NOTICEABLE interrupt; it may occur earlier, but I can't see it.
+
+
+(Exercise 6 is a coding exercise)
+For this exercise, the TA recommended using a sys call, so I did. A sys call cannot be interrupted because it is running in the kernel, so if a process is in the middle of printing the character, it won't be stopped from doing so. The sys call merely accepts a character as input, and acts the same way setting my priority or share sys calls do. Merely call an interrupt (this one called USER2) with character stored in eax. 
+
+Anything else you'd like us to know:
+Sure. I did exercises 7 and 8 as well (I think).
+
+So for EX7, I implemented a lottery scheduling algo. However, I'll admit, it's pretty poor. The idea (and essentially, my idea) was to randomly create an array of buckets every time a process is run. Then, randomly select a ticket, find which bucket that ticket is in, and run the process associated with that ticket. Rinse and repeat. For some reason, my continually randomizing bucket array isn't working, so currently, only 1 lottery is created, and all the processes are run based on that. It isn't starvation, because the processes with almost no tickets are still occasionally run. It's just that they aren't run enough. Regardless, it's the thought and semi-implementation that counts, right?
+
+EX8 essentially required copying the technique used for cursorpos. Needed to define the lock inside schedos.h, provide an address for the lock in the symbols.ld file, and then use atomic_swap in schedos-1.c on the lock when printing the character. Also, an #ifdef is used indicating EX8 is implemented. This way, I'm using a atomicity instead of the sys call to implement this.
+
