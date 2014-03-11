@@ -23,7 +23,7 @@ int addedLast = 0;
 int parenFlag = 0;
 int anyflag = 0;
 int lineCounter = 1;
-int size = 100; 
+int size = 10000; 
 
 struct command_stream
 {
@@ -458,19 +458,6 @@ make_command_stream (int (*get_next_byte) (void *),
 	free(words);
 
 	i = 0;
-	//printf("DONE WITH THE FUCKIGN TREE of size: %i %i \n",cs->size,wordcount);
-	for(; words[i] !='\0' ; i++){
-		int j =0;
-		//printf("PRINTING FAGGS");
-		for(; words[i][j] != '\0'; j++){
-			//printf("%c",words[i][j]);
-		}
-		//printf("\n");
-	}
-	//cs->size--;
-	/*printf("%i %i \n",cs->size,size);
-	command_t * temp = realloc(cs->forest_pointer,size);
-	cs->forest_pointer = temp;*/
 	return cs;
   // return 0;
 }
