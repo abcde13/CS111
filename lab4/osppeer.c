@@ -37,6 +37,7 @@ static int listen_port;
 
 #define TASKBUFSIZ	4096	// Size of task_t::buf
 #define FILENAMESIZ	256	// Size of task_t::filename
+#define MAXFILESIZE	1000000 // 1GB 
 
 typedef enum tasktype {		// Which type of connection is this?
 	TASK_TRACKER,		// => Tracker connection
@@ -167,6 +168,10 @@ taskbufresult_t read_to_taskbuf(int fd, task_t *t)
 		amt = read(fd, &t->buf[tailpos], TASKBUFSIZ - tailpos);
 	else
 		amt = read(fd, &t->buf[tailpos], headpos - tailpos);
+
+	if(headpos > TASKBUFSIZE){
+		return TBUF_ERROR;
+	}
 
 	if (amt == -1 && (errno == EINTR || errno == EAGAIN
 			  || errno == EWOULDBLOCK))
@@ -476,7 +481,7 @@ task_t *start_download(task_t *tracker_task, const char *filename)
 		error("* Error while allocating task");
 		goto exit;
 	}
-	strcpy(t->filename, filename);
+	strncpy(t->filename, filename, FILENAMESIZ-1); //PART 2
 
 	// add peers
 	s1 = tracker_task->buf;
@@ -555,6 +560,8 @@ static void task_download(task_t *t, task_t *tracker_task)
 
 	// Read the file into the task buffer from the peer,
 	// and write it from the task buffer onto disk.
+	int rate = 0;
+	int count = 0;
 	while (1) {
 		int ret = read_to_taskbuf(t->peer_fd, t);
 		if (ret == TBUF_ERROR) {
@@ -569,6 +576,16 @@ static void task_download(task_t *t, task_t *tracker_task)
 			error("* Disk write error");
 			goto try_again;
 		}
+
+		if(t->total_written > MAXFILESIZE){	//PART 2
+			error("* File too big. Trying again");
+			goto try_again;
+		}
+		/*rate = t->total_written/count;
+		if(rate < MINRATE && count >= SAMPLESIZ){
+			error("* Downloading too slow. Trying again");
+			goto try_again;
+		}*/
 	}
 
 	// Empty files are usually a symptom of some error.
@@ -643,6 +660,25 @@ static void task_upload(task_t *t)
 	}
 
 	assert(t->head == 0);
+	//get the current working directory
+	char this_path[PATH_MAX+1];
+	if(getcwd(this_path, PATH_MAX+1) == NULL) {
+		error("* Couldn't retrieve current directory");
+		goto exit;
+	}
+	
+	//get the directory of the file
+	char file_path[PATH_MAX+1];
+	if(realpath(t->filename, file_path) == NULL) {
+		error("* Couldn't retrieve file path");
+		goto exit;	
+	}
+	//check if the directories match
+	int len = strlen(cur_path);
+	if(strncmp(file_path, cur_path, len) != 0) { //if the file is not in the current directory
+		error("* Bad access. Trying to use file not in the current directory");
+		goto exit;	
+	}
 	if (osp2p_snscanf(t->buf, t->tail, "GET %s OSP2P\n", t->filename) < 0) {
 		error("* Odd request %.*s\n", t->tail, t->buf);
 		goto exit;
