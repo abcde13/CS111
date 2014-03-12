@@ -35,9 +35,10 @@ static int listen_port;
  * a bounded buffer that simplifies reading from and writing to peers.
  */
 
-#define TASKBUFSIZ	4096	// Size of task_t::buf
+#define TASKBUFSIZ	40960	// Size of task_t::buf
 #define FILENAMESIZ	256	// Size of task_t::filename
 #define MAXFILESIZE	1000000 // 1GB 
+#define MINRATE		128	// 128 bytes/sec
 
 typedef enum tasktype {		// Which type of connection is this?
 	TASK_TRACKER,		// => Tracker connection
@@ -168,10 +169,6 @@ taskbufresult_t read_to_taskbuf(int fd, task_t *t)
 		amt = read(fd, &t->buf[tailpos], TASKBUFSIZ - tailpos);
 	else
 		amt = read(fd, &t->buf[tailpos], headpos - tailpos);
-
-	if(headpos > TASKBUFSIZE){
-		return TBUF_ERROR;
-	}
 
 	if (amt == -1 && (errno == EINTR || errno == EAGAIN
 			  || errno == EWOULDBLOCK))
@@ -581,11 +578,12 @@ static void task_download(task_t *t, task_t *tracker_task)
 			error("* File too big. Trying again");
 			goto try_again;
 		}
-		/*rate = t->total_written/count;
-		if(rate < MINRATE && count >= SAMPLESIZ){
+		rate = t->total_written/count;
+		if(rate < MINRATE){
 			error("* Downloading too slow. Trying again");
 			goto try_again;
-		}*/
+		}
+		count++;
 	}
 
 	// Empty files are usually a symptom of some error.
@@ -674,8 +672,8 @@ static void task_upload(task_t *t)
 		goto exit;	
 	}
 	//check if the directories match
-	int len = strlen(cur_path);
-	if(strncmp(file_path, cur_path, len) != 0) { //if the file is not in the current directory
+	int len = strlen(this_path);
+	if(strncmp(file_path, this_path, len) != 0) { //if the file is not in the current directory
 		error("* Bad access. Trying to use file not in the current directory");
 		goto exit;	
 	}
