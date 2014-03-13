@@ -23,10 +23,13 @@
 #include "md5.h"
 #include "osp2p.h"
 
-int evil_mode = 1;			// nonzero iff this peer should behave badly
+int evil_mode = 0;			// nonzero iff this peer should behave badly
 
 static struct in_addr listen_addr;	// Define listening endpoint
 static int listen_port;
+char *ip_tracker[1000];
+int ip_tracker_counter = 0;
+int num_times_accessed[1000];
 
 
 /*****************************************************************************
@@ -719,6 +722,7 @@ static task_t *task_listen(task_t *listen_task)
 	task_t *t;
 	assert(listen_task->type == TASK_PEER_LISTEN);
 
+	
 	fd = accept(listen_task->peer_fd,
 		    (struct sockaddr *) &peer_addr, &peer_addrlen);
 	if (fd == -1 && (errno == EINTR || errno == EAGAIN
@@ -729,6 +733,38 @@ static task_t *task_listen(task_t *listen_task)
 
 	message("* Got connection from %s:%d\n",
 		inet_ntoa(peer_addr.sin_addr), ntohs(peer_addr.sin_port));
+
+/*	if(ip_tracker_counter == 0)
+	{
+		ip_tracker[ip_tracker_counter] = inet_ntoa(peer_addr.sin_addr);
+		num_times_accessed[ip_tracker_counter]++;
+		ip_tracker_counter++;
+	}
+	
+	else
+	{
+		int i;
+		for(i = 0; i < ip_tracker_counter; i++)
+		{
+			if(ip_tracker[i] == inet_ntoa(peer_addr.sin_addr))
+			{
+				num_times_accessed[i]++;
+				if(num_times_accessed[i] >= 10)
+				{
+					error("Trying to monopolize me are you?\n");
+					t = task_new(TASK_UPLOAD);
+					t->peer_fd = -1;
+					return t;
+				}	
+			}	
+		}
+		if(i == ip_tracker_counter)
+		{
+			ip_tracker[ip_tracker_counter] = inet_ntoa(peer_addr.sin_addr);
+			num_times_accessed[ip_tracker_counter]++;
+			ip_tracker_counter++;
+		}
+	}*/ 
 
 	t = task_new(TASK_UPLOAD);
 	t->peer_fd = fd;
@@ -838,6 +874,14 @@ int main(int argc, char *argv[])
 	char *s;
 	const char *myalias;
 	struct passwd *pwent;
+//	char * word = "a";
+	
+/*	int i;
+	for(i = 0; i < 1000; i++)
+	{
+		num_times_accessed[i] = 0;
+		ip_tracker[i] = word;
+	}*/
 
 	// Default tracker is read.cs.ucla.edu
 	osp2p_sscanf("131.179.80.139:11111", "%I:%d",
@@ -928,6 +972,9 @@ int main(int argc, char *argv[])
 	// Then accept connections from other peers and upload files to them!
 	while ((t = task_listen(listen_task)))
 	{
+		if(t->peer_fd == -1)
+			continue;
+
 		cpid = fork();
 
 		if(cpid == 0){
