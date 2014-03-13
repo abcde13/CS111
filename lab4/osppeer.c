@@ -23,7 +23,7 @@
 #include "md5.h"
 #include "osp2p.h"
 
-int evil_mode = 1;			// nonzero iff this peer should behave badly
+int evil_mode = 0;			// nonzero iff this peer should behave badly
 
 static struct in_addr listen_addr;	// Define listening endpoint
 static int listen_port;
@@ -497,7 +497,7 @@ task_t *start_download(task_t *tracker_task, const char *filename)
 	assert(tracker_task->type == TASK_TRACKER);
 
 	if (strlen(filename) > 0) { // If we aren't using an empty filename, we want to be able to checksum test
-		message("* Getting checksum for '%s'\n", filename);
+		message("* Receiving Checksum for '%s'\n", filename);
 		osp2p_writef(tracker_task->peer_fd, "MD5SUM %s\n", filename);
 		messagepos = read_tracker_response(tracker_task);
 
@@ -601,9 +601,11 @@ static void task_download(task_t *t, task_t *tracker_task)
 			buf[count] = '~';
 			count++;
 		}
+		count = 0;
+		osp2p_writef(t->peer_fd, "GET %s OSP2P\n", buf);
+	} else {
+		osp2p_writef(t->peer_fd, "GET %s OSP2P\n", t->filename);
 	}
-	count = 0;
-	osp2p_writef(t->peer_fd, "GET %s OSP2P\n", buf);
 
 	// Open disk file for the result.
 	// If the filename already exists, save the file in a name like
