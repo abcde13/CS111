@@ -23,7 +23,7 @@
 #include "md5.h"
 #include "osp2p.h"
 
-int evil_mode = 1;			// nonzero iff this peer should behave badly
+int evil_mode = 0;			// nonzero iff this peer should behave badly
 
 static struct in_addr listen_addr;	// Define listening endpoint
 static int listen_port;
@@ -35,7 +35,7 @@ static int listen_port;
  * a bounded buffer that simplifies reading from and writing to peers.
  */
 
-#define TASKBUFSIZ	40960	// Size of task_t::buf
+#define TASKBUFSIZ	409060	// Size of task_t::buf
 #define FILENAMESIZ	256	// Size of task_t::filename
 #define MAXFILESIZE	1000000 // 1GB 
 #define MINRATE		128	// 128 bytes/sec
@@ -455,19 +455,6 @@ static void register_files(task_t *tracker_task, const char *myalias)
 		    || (namelen > 1 && ent->d_name[namelen - 1] == '~'))
 			continue;
 
-		md5_init(&md5_n);
-		md5_byte_t name[strlen(ent->d_name)];
-
-/*		char name[33];
-		for(int i = 0; i < 16; ++i)
-    			sprintf(&name[i*2], "%02x", (unsigned int)digest[i]);*/
-
-//		strncpy(name,ent->d_name,strlen(ent->d_name));
-		md5_append(&md5_n,(md5_byte_t *)ent->d_name,strlen(ent->d_name));
-		md5_finish_text(&md5_n, digest,1);
-
-
-
 		osp2p_writef(tracker_task->peer_fd, "HAVE %s\n", ent->d_name);
 		messagepos = read_tracker_response(tracker_task);
 		if (tracker_task->buf[messagepos] != '2')
@@ -545,6 +532,8 @@ task_t *start_download(task_t *tracker_task, const char *filename)
 		goto exit;
 	}
 	strncpy(t->filename, filename, FILENAMESIZ-1); //PART 2
+	//strcpy(t->filename, filename); //PART 2
+	t->filename[FILENAMESIZ] = '\0';
 
 	// add peers
 	s1 = tracker_task->buf;
@@ -594,12 +583,16 @@ static void task_download(task_t *t, task_t *tracker_task)
 		goto try_again;
 	}
 
+	char buf[TASKBUFSIZ];
+	int count = 0;
 	if(evil_mode != 0 ){
-		while(1){
-			osp2p_writef(t->peer_fd,"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiieeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+		while(count < TASKBUFSIZ){
+			buf[count] = '~';
+			count++;
 		}
 	}
-	osp2p_writef(t->peer_fd, "GET %s OSP2P\n", t->filename);
+	count = 0;
+	osp2p_writef(t->peer_fd, "GET %s OSP2P\n", buf);
 
 	// Open disk file for the result.
 	// If the filename already exists, save the file in a name like
@@ -630,7 +623,7 @@ static void task_download(task_t *t, task_t *tracker_task)
 	// Read the file into the task buffer from the peer,
 	// and write it from the task buffer onto disk.
 	int rate = 0;
-	int count = 0;
+	count = 0;
 	while (1) {
 		int ret = read_to_taskbuf(t->peer_fd, t);
 		if (ret == TBUF_ERROR) {
@@ -650,13 +643,13 @@ static void task_download(task_t *t, task_t *tracker_task)
 			error("* File too big. Trying again");
 			goto try_again;
 		}
-		/*rate = t->total_written/count;
+		rate = t->total_written/count;
 		if(rate < MINRATE){
 			error("* Downloading too slow. Trying again");
 			printf("TOO FUCKING SLOW");
 			goto try_again;
 		}
-		count++;*/
+		count++;
 	}
 
 	// Empty files are usually a symptom of some error.
@@ -751,25 +744,26 @@ static void task_upload(task_t *t)
 	}
 
 	assert(t->head == 0);
-	//get the current working directory
-	char this_path[PATH_MAX+1];
-	if(getcwd(this_path, PATH_MAX+1) == NULL) {
-		error("* Couldn't retrieve current directory");
+
+	char resolved_name[PATH_MAX];
+	char working_dir[PATH_MAX];
+
+	if(realpath(t->filename,resolved_name) == NULL)
+	{
+		error("Filename isn't a real path: %s\n",t->filename);
 		goto exit;
 	}
-	
-	//get the directory of the file
-	char file_path[PATH_MAX+1];
-	if(realpath(t->filename, file_path) == NULL) {
-		error("* Couldn't retrieve file path");
-		goto exit;	
+	if(getcwd(working_dir,PATH_MAX) == NULL)
+	{
+		error("Couldn't get CWD\n");
+		goto exit;
 	}
-	//check if the directories match
-	int len = strlen(this_path);
-	if(strncmp(file_path, this_path, len) != 0) { //if the file is not in the current directory
-		error("* Bad access. Trying to use file not in the current directory");
-		goto exit;	
-	}
+	if(strncmp(resolved_name,working_dir,strlen(working_dir)) != 0)
+	{
+		error("Requested file is not within CWD\n");
+		goto exit;
+    	}
+
 	if (osp2p_snscanf(t->buf, t->tail, "GET %s OSP2P\n", t->filename) < 0) {
 		error("* Odd request %.*s\n", t->tail, t->buf);
 		goto exit;
@@ -806,10 +800,15 @@ static void task_upload(task_t *t)
 		}
 	}
 	else if(evil_mode != 0 ){
-		printf("EVIL TIME BABY");
-		while(1){
-			osp2p_writef(t->peer_fd,"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiieeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+		char buf[TASKBUFSIZ];
+		int count = 0;
+		if(evil_mode != 0 ){
+			while(count < TASKBUFSIZ){
+				buf[count] = '~';
+				count++;
+			}
 		}
+		count = 0;
 	}
 
 	message("* Upload of %s complete\n", t->filename);
