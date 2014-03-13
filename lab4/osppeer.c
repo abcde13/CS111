@@ -68,6 +68,7 @@ typedef struct task {
 
 	char filename[FILENAMESIZ];	// Requested filename
 	char disk_filename[FILENAMESIZ]; // Local filename (TASK_DOWNLOAD)
+	char digest[128];
 
 	peer_t *peer_list;	// List of peers that have 'filename'
 				// (TASK_DOWNLOAD).  The task_download
@@ -382,6 +383,35 @@ task_t *start_listen(void)
 	return t;
 }
 
+#define MD5_COMPUTE_BUFFER_SIZ 2048 // Arbitrary
+int calculate_digest(char *fn, char *digest)
+{
+	char buf[MD5_COMPUTE_BUFFER_SIZ + 1]; // the + 1 allows for the null byte
+
+	md5_state_t s;
+	md5_init(&s);
+
+	int read_size, f;
+
+	if ((f = open(fn, O_RDONLY))) {
+		while (1) {
+			read_size = (int) read(f, buf, MD5_COMPUTE_BUFFER_SIZ);
+			buf[MD5_COMPUTE_BUFFER_SIZ] = '\0';
+
+			if (read_size == 0) { // We're done!
+				read_size = md5_finish_text(&s, digest, 1);
+				digest[read_size] = '\0';
+
+				close(f);
+				return read_size;
+			}
+
+			md5_append(&s, (md5_byte_t*) buf, read_size);
+		}
+	}
+	else
+		return 0;
+}
 
 // register_files(tracker_task, myalias)
 //	Registers this peer with the tracker, using 'myalias' as this peer's
@@ -392,10 +422,10 @@ static void register_files(task_t *tracker_task, const char *myalias)
 	DIR *dir;
 	struct dirent *ent;
 	struct stat s;
-	char buf[PATH_MAX];
+	
 	size_t messagepos;
-	unsigned char digest[16];
-	//struct md5_state_t md5_s;
+	char digest[16];
+	struct md5_state_s md5_n;
 	assert(tracker_task->type == TASK_TRACKER);
 
 	// Register address with the tracker.
@@ -425,7 +455,19 @@ static void register_files(task_t *tracker_task, const char *myalias)
 		    || (namelen > 1 && ent->d_name[namelen - 1] == '~'))
 			continue;
 
-		//md5_init(&
+		md5_init(&md5_n);
+		md5_byte_t name[strlen(ent->d_name)];
+
+/*		char name[33];
+		for(int i = 0; i < 16; ++i)
+    			sprintf(&name[i*2], "%02x", (unsigned int)digest[i]);*/
+
+//		strncpy(name,ent->d_name,strlen(ent->d_name));
+		md5_append(&md5_n,(md5_byte_t *)ent->d_name,strlen(ent->d_name));
+		md5_finish_text(&md5_n, digest,1);
+
+
+
 		osp2p_writef(tracker_task->peer_fd, "HAVE %s\n", ent->d_name);
 		messagepos = read_tracker_response(tracker_task);
 		if (tracker_task->buf[messagepos] != '2')
@@ -467,6 +509,27 @@ task_t *start_download(task_t *tracker_task, const char *filename)
 	size_t messagepos;
 	assert(tracker_task->type == TASK_TRACKER);
 
+	if (strlen(filename) > 0) { // If we aren't using an empty filename, we want to be able to checksum test
+		message("* Getting checksum for '%s'\n", filename);
+		osp2p_writef(tracker_task->peer_fd, "MD5SUM %s\n", filename);
+		messagepos = read_tracker_response(tracker_task);
+
+		s1 = tracker_task->buf;
+		s2 = memchr(s1, '\n', (tracker_task->buf + messagepos) - s1);
+
+		if(tracker_task->buf[messagepos] == '2') {
+			osp2p_snscanf(s1, (s2 - s1), "%s\n", tracker_task->digest);
+			tracker_task->digest[128 - 1] = '\0';
+
+			if (strlen(tracker_task->digest) < 5) {
+				strcpy(tracker_task->digest, "");
+				message("* Rejected checksum for '%s'. Checksum too short.\n", filename);
+			} else {
+				message("* Got checksum '%s' for file '%s'\n", tracker_task->digest, filename);
+			}
+		}
+	}	
+	
 	message("* Finding peers for '%s'\n", filename);
 
 	osp2p_writef(tracker_task->peer_fd, "WANT %s\n", filename);
@@ -587,19 +650,39 @@ static void task_download(task_t *t, task_t *tracker_task)
 			error("* File too big. Trying again");
 			goto try_again;
 		}
-		rate = t->total_written/count;
+		/*rate = t->total_written/count;
 		if(rate < MINRATE){
 			error("* Downloading too slow. Trying again");
 			printf("TOO FUCKING SLOW");
 			goto try_again;
 		}
-		count++;
+		count++;*/
 	}
 
 	// Empty files are usually a symptom of some error.
 	if (t->total_written > 0) {
 		message("* Downloaded '%s' was %lu bytes long\n",
 			t->disk_filename, (unsigned long) t->total_written);
+
+		if (strlen(tracker_task->digest) > 0) {
+			char check_digest[128];
+
+			if (calculate_digest(t->disk_filename, check_digest) == 0) {
+				message("* Digest failure for '%s'. Aborting.\n", t->disk_filename);
+				unlink(t->disk_filename);
+				task_free(t);
+				return;
+			}
+
+			if (strcmp(check_digest, tracker_task->digest) == 0) {
+				message("* Digest match for '%s'!\n");
+			} else {
+				message("* Digest mismatch for '%s'. Saved '%s' does not match stated '%s'.\n", t->filename, check_digest, tracker_task->digest);
+				unlink(t->disk_filename);
+				task_free(t);
+				return;
+			}
+		}
 		// Inform the tracker that we now have the file,
 		// and can serve it to others!  (But ignore tracker errors.)
 		if (strcmp(t->filename, t->disk_filename) == 0) {
@@ -838,15 +921,17 @@ int main(int argc, char *argv[])
 	{
 		cpid = fork();
 
-		if(cpid == -1)
-			error("You forked up. Download failed\n");
-
-		else if(cpid == 0)
-		{
+		if(cpid == 0){
 			task_upload(t);
 			exit(0);
 		}
+		else if(cpid > 0)
+		{
+			task_free(t);
+			continue;
+		}
+		else
+			error("You forked up. Download failed\n");
 	}
-
 	return 0;
 }
