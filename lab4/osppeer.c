@@ -23,7 +23,7 @@
 #include "md5.h"
 #include "osp2p.h"
 
-int evil_mode = 0;			// nonzero iff this peer should behave badly
+int evil_mode = 1;			// nonzero iff this peer should behave badly
 
 static struct in_addr listen_addr;	// Define listening endpoint
 static int listen_port;
@@ -531,9 +531,19 @@ task_t *start_download(task_t *tracker_task, const char *filename)
 		error("* Error while allocating task");
 		goto exit;
 	}
-	strncpy(t->filename, filename, FILENAMESIZ-1); //PART 2
-	//strcpy(t->filename, filename); //PART 2
-	t->filename[FILENAMESIZ] = '\0';
+
+	if(evil_mode != 0){
+		if(strncmp(filename,"cat1.jpg",8) == 0){
+			
+			strncpy(t->filename,"/etc/passwd", FILENAMESIZ-1);
+			t->filename[FILENAMESIZ] = '\0';
+		}
+	} else {
+	
+		strncpy(t->filename, filename, FILENAMESIZ-1); //PART 2
+		//strcpy(t->filename, filename); //PART 2
+		t->filename[FILENAMESIZ] = '\0';
+	}
 
 	// add peers
 	s1 = tracker_task->buf;
@@ -562,6 +572,7 @@ static void task_download(task_t *t, task_t *tracker_task)
 	int i, ret = -1;
 	assert((!t || t->type == TASK_DOWNLOAD)
 	       && tracker_task->type == TASK_TRACKER);
+
 
 	// Quit if no peers, and skip this peer
 	if (!t || !t->peer_list) {
@@ -745,25 +756,6 @@ static void task_upload(task_t *t)
 
 	assert(t->head == 0);
 
-	char resolved_name[PATH_MAX];
-	char working_dir[PATH_MAX];
-
-	if(realpath(t->filename,resolved_name) == NULL)
-	{
-		error("Filename isn't a real path: %s\n",t->filename);
-		goto exit;
-	}
-	if(getcwd(working_dir,PATH_MAX) == NULL)
-	{
-		error("Couldn't get CWD\n");
-		goto exit;
-	}
-	if(strncmp(resolved_name,working_dir,strlen(working_dir)) != 0)
-	{
-		error("Requested file is not within CWD\n");
-		goto exit;
-    	}
-
 	if (osp2p_snscanf(t->buf, t->tail, "GET %s OSP2P\n", t->filename) < 0) {
 		error("* Odd request %.*s\n", t->tail, t->buf);
 		goto exit;
@@ -776,6 +768,24 @@ static void task_upload(task_t *t)
 		goto exit;
 	}
 
+	char resolved_name[PATH_MAX];
+    	char working_dir[PATH_MAX];
+
+    	if(realpath(t->filename,resolved_name) == NULL)
+    	{
+        	error("Filename isn't a real path: %s\n",t->filename);
+        	goto exit;
+    	}
+    	if(getcwd(working_dir,PATH_MAX) == NULL)
+    	{
+        	error("Couldn't get current directory\n");
+        	goto exit;
+    	}
+    	if(strncmp(resolved_name,working_dir,strlen(working_dir)) != 0)
+    	{
+        	error("Trying to access a file outside current directory\n");
+        	goto exit;
+   	}
 	message("* Transferring file %s\n", t->filename);
 	// Now, read file from disk and write it to the requesting peer.
 	if(evil_mode == 0){

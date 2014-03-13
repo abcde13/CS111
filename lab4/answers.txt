@@ -24,15 +24,24 @@ Email: joraaverchahal@gmail.com
 
 # EXERCISE 1: What method you used to make your peer download and upload
 #    files in parallel?  (~1-3 sentences)
+We simply forked the processes as we did in earlier labs to run the downloads in parallel. We do the same for uploads as ell, although it took a little more work understanding the task_upload when the forked processe's pid was 0.
 
 # EXERCISE 2A: What conditions did you find and fix that would have
 #    triggered a buffer overrun bug?  (~1-3 sentences each)
 
+The size for the filename was being written to a buffer in an unprotected manner. Thus, instead of using strcpy, we use strncpy and specify a strict file size.
+
 # EXERCISE 2B: What other robustness problems did you fix?  (~1-3 sentences
 #    each)
 
+We implemented a simple check against peers trying to access other directories. We simply compare the string of the absolute directory we are in with the absolute directory the peer is trying to to access. If the peer's absolute path differs from our absolute path, then it must be trying to access something outside the test directory, which is evil. 
+
 # EXERCISE 3: Describe the attacks you implemented for "evil mode".  Why
 #    are they attacks?  (~3-10 sentences each)
+
+1. If someone connects to our peer in order to download a file, we commence a buffer overflow attack on the aforementioned security hole in the file name. On a peer where this issue has not been patched, the overflow should create a segmentation fault.
+
+2. 
 
 # Extra credit problems
 #Extra credit problem: none
