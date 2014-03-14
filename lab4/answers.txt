@@ -21,7 +21,7 @@ We simply forked the processes as we did in earlier labs to run the downloads in
 parallel. We do the same for uploads as ell, although it took a little more work
 understanding the task_upload when the forked processe's pid was 0. Basically,
 we had to free the current task in the parent process while executing the upload
-in the child process - a minor bump but we managed to pul through.
+in the child process - a minor bump but we managed to pull through.
 
 # EXERCISE 2A: What conditions did you find and fix that would have triggered a
 # buffer overrun bug?  (~1-3 sentences each)
