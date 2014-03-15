@@ -12,8 +12,8 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <stdarg.h>
-#include <ctype.h>
-#include <sys/socket.h>
+#include <ctype.h> 
+#include <sys/socket.h> 
 #include <dirent.h>
 #include <netdb.h>
 #include <assert.h>
@@ -22,6 +22,8 @@
 #include <limits.h>
 #include "md5.h"
 #include "osp2p.h"
+#include "access.h"
+#include "regex.h"
 
 int evil_mode = 0;			// nonzero iff this peer should behave badly
 
@@ -30,6 +32,9 @@ static int listen_port;
 char *ip_tracker[1000];
 int ip_tracker_counter = 0;
 int num_times_accessed[1000];
+char access_array[1000];
+char cur_ip[30];
+
 
 
 /*****************************************************************************
@@ -736,6 +741,10 @@ static task_t *task_listen(task_t *listen_task)
 	message("* Got connection from %s:%d\n",
 		inet_ntoa(peer_addr.sin_addr), ntohs(peer_addr.sin_port));
 
+	
+	strcpy(cur_ip,inet_ntoa(peer_addr.sin_addr));
+	
+
 /*	if(ip_tracker_counter == 0)
 	{
 		ip_tracker[ip_tracker_counter] = inet_ntoa(peer_addr.sin_addr);
@@ -790,6 +799,31 @@ static task_t *task_listen(task_t *listen_task)
 //	the requested file.
 static void task_upload(task_t *t)
 {
+	char buf[100];
+	bzero(buf,100);
+	int reti =-1;
+	int fail;
+	strcat(buf,"<Files 'check.yo'>((.|\\s)*?)Allow from ");
+	strcat(buf, cur_ip);
+
+	regex_t regex;
+	message("buf: %s \n", buf);
+	/*reti = regcomp(&regex, "^a[[:alnum:]]", 0);
+        if( reti ){ message("Could not compile regex\n"); }
+	
+	reti = regexec(&regex, buf, 1, NULL, 0);
+	
+	message("RETIS IS: %i", reti);*/
+
+	compile_regex(&regex, buf);  
+	int found = match_regex(&regex, access_array); 
+
+	if(found == 1){
+		message("ALLOWED \n");
+	} else {
+		message("DENIED \n");
+		goto exit;
+	}
 	assert(t->type == TASK_UPLOAD);
 	// First, read the request from the peer.
 	while (1) {
@@ -880,6 +914,9 @@ static void task_upload(task_t *t)
 //	The main loop!
 int main(int argc, char *argv[])
 {
+	FILE* access;
+	access = openfile(".htaccess");
+	fread(access_array,sizeof(char),1000,access);
 	task_t *tracker_task, *listen_task, *t;
 	struct in_addr tracker_addr;
 	int tracker_port;

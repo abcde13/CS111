@@ -1,0 +1,4 @@
+<Files 'check.yo'>
+Deny from all
+Allow from 164.67.100.234
+</Files>
