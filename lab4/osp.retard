@@ -747,13 +747,11 @@ static task_t *task_listen(task_t *listen_task)
 		int i;
 		for(i = 0; i < ip_tracker_counter; i++)
 		{
-			//printf("ipcounter %i\n", ip_tracker_counter);
-			//printf("STRCMP %i\n",(strcmp(ip_tracker[i],inet_ntoa(peer_addr.sin_addr)))); 
 			if(strcmp(ip_tracker[i],inet_ntoa(peer_addr.sin_addr)) == 0)
 			{
-			//	printf("i: %i \n%s \n%s \n",i,ip_tracker[i],inet_ntoa(peer_addr.sin_addr));
+				printf("\ni: %i \n%s \n%s \n",i,ip_tracker[i],inet_ntoa(peer_addr.sin_addr));
 				num_times_accessed[i]++;
-			//	printf("%i NUM \n",num_times_accessed[i]);
+				printf("%i NUM \n",num_times_accessed[i]);
 				if(num_times_accessed[i] >= 10)
 				{
 					error("Trying to monopolize me are you?\n");
@@ -763,19 +761,14 @@ static task_t *task_listen(task_t *listen_task)
 				} else {
 					break;
 				}	
-			}
-			//else
-			//	printf("no match found\n");	
+			}	
 		}
 		if(i == ip_tracker_counter)
 		{
-			//printf("ADDING STUPID: %s %i\n", inet_ntoa(peer_addr.sin_addr), ip_tracker_counter);
-			char * fucking_buffer = malloc(30);
-			memcpy(fucking_buffer,inet_ntoa(peer_addr.sin_addr),30);
-			ip_tracker[ip_tracker_counter] = fucking_buffer;
+			printf("\nADDING STUPID: %s\n", inet_ntoa(peer_addr.sin_addr));
+			ip_tracker[ip_tracker_counter] = inet_ntoa(peer_addr.sin_addr);
 			num_times_accessed[ip_tracker_counter]++;
 			ip_tracker_counter++;
-			//printf("ipcounter %i\n", ip_tracker_counter);
 		}
 //	} 
 	t = task_new(TASK_UPLOAD);

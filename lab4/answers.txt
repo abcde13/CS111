@@ -1,49 +1,85 @@
-# Fill in your name, student ID, and email address in this file.
-# If you are working in a team, fill out the information for both team 
-# members.
+# Fill in your name, student ID, and email address in this file.  If you are
+# working in a team, fill out the information for both team members.
 
 # SUBMIT THE LAB ONLY ONCE (from only one partner). This file will be
-# automatically parsed in order to give both team members credit for the
-# lab.
+# automatically parsed in order to give both team members credit for the lab.
 
-# You need to fill in the EXERCISE sections describing your solutions
-# for Tasks 1, 2, and 3, as well as write the corresponding code.
-# If you did one or more extra credit problems, indicate which one in the
-# appropriate section below (remove the # sign first). If you have any other
-# information you'd like us to know, please add it at the end of the file.
+# You need to fill in the EXERCISE sections describing your solutions for Tasks
+# 1, 2, and 3, as well as write the corresponding code.  If you did one or more
+# extra credit problems, indicate which one in the appropriate section below
+# (remove the # sign first). If you have any other information you'd like us to
+# know, please add it at the end of the file.
 
 # Partner 1
-Name: Joraaver Chahal
-Student ID: 304200975
+Name: Joraaver Chahal 
+Student ID: 304200975	
 Email: joraaverchahal@gmail.com
 
-# Partner 2 (if you're working in a team)
-# Name: 
-# Student ID: 
-# Email: 
+# Partner 2
+Name: Arjun Lakshmipathy 
+Student ID: 804158733 
+Email: lakshmipathyarjun6@gmail.com
 
-# EXERCISE 1: What method you used to make your peer download and upload
-#    files in parallel?  (~1-3 sentences)
-We simply forked the processes as we did in earlier labs to run the downloads in parallel. We do the same for uploads as ell, although it took a little more work understanding the task_upload when the forked processe's pid was 0.
+# EXERCISE 1: What method you used to make your peer download and upload files
+# in parallel?  (~1-3 sentences)
+We simply forked the processes as we did in earlier labs to run the downloads in
+parallel. We do the same for uploads as ell, although it took a little more work
+understanding the task_upload when the forked processe's pid was 0. Basically,
+we had to free the current task in the parent process while executing the upload
+in the child process - a minor bump but we managed to pull through.
 
-# EXERCISE 2A: What conditions did you find and fix that would have
-#    triggered a buffer overrun bug?  (~1-3 sentences each)
+# EXERCISE 2A: What conditions did you find and fix that would have triggered a
+# buffer overrun bug?  (~1-3 sentences each)
 
-The size for the filename was being written to a buffer in an unprotected manner. Thus, instead of using strcpy, we use strncpy and specify a strict file size.
+The size for the filename was being written to a buffer in an unprotected
+manner. Thus, instead of using strcpy, we use strncpy and specify a strict file
+size. In addition, we noticed that the size of TASK_BUFF_SIZE did not appear to
+be large enough to accommodate the large number of tasks that would be requested
+of our peer in make popular (we considered this a sort of overflow of requests).
+To fix this, we increased the buffer size by an order of magnitude, thereby
+enabling our code to take care of the requests. 
 
 # EXERCISE 2B: What other robustness problems did you fix?  (~1-3 sentences
-#    each)
+# each)
 
-We implemented a simple check against peers trying to access other directories. We simply compare the string of the absolute directory we are in with the absolute directory the peer is trying to to access. If the peer's absolute path differs from our absolute path, then it must be trying to access something outside the test directory, which is evil. 
+We implemented a simple check against peers trying to access other directories.
+We simply compare the string of the absolute directory we are in with the
+absolute directory the peer is trying to to access. If the peer's absolute path
+differs from our absolute path, then it must be trying to access something
+outside the test directory, which is evil. 
 
-# EXERCISE 3: Describe the attacks you implemented for "evil mode".  Why
-#    are they attacks?  (~3-10 sentences each)
+Also, we ensure resource monopolization does not occur. If a particular IP address
+tries to download files more than 10 times, we consider this highly unlikely to be
+a sensible guy. Thus, we cut him off. We realize that this is slightly naive, considering
+that we do not check the time between file requests, there is a chance that a normal peer
+is trying to access > 10 files over a span of, say, a day. This is also a subtle defense.
+In the same way a software should report that either a username or a password is wrong
+so that an attacker looking to do a brute force attack won't know which one is wrong, 
+our defense does not tell the attacker that we failed to serve his request. Instead, it
+merely continues operations like normal, and present the attacker with an empty file.
 
-1. If someone connects to our peer in order to download a file, we commence a buffer overflow attack on the aforementioned security hole in the file name. On a peer where this issue has not been patched, the overflow should create a segmentation fault.
+# EXERCISE 3: Describe the attacks you implemented for "evil mode".  Why are
+# they attacks?  (~3-10 sentences each)
 
-2. 
+1. If someone connects to our peer in order to download a file, we commence a
+buffer overflow attack on the aforementioned security hole in the file name. On
+a peer where this issue has not been patched, the overflow should create a
+segmentation fault.
+
+2. We also attempt to exploit a normal peer's lack of defense against change
+in directory by trying to access '/etc/passwd'. We realize this is naive; no simple
+attack like this will give me permission to this file (considering write permissions and suid
+stuff is unique for this file). However the implications of this kind of attack is very real,
+and gaining access to a single line in this file can be devastating. 
 
 # Extra credit problems
-#Extra credit problem: none
+# Extra credit problem: yes
+
+We did the MD5 checksum (to the best of our ability). Every time we try and our peer tries to access
+a download, we build the checksum based on the content of the data, and check it against the registered
+cheksum of the file. If they don't match, the integrity has been construed. Else, it is an untouched 
+file (at least, untouched between it's registration and our access of it).
 
 # Add any other information you'd like us to know below this line.
+
+Nope
